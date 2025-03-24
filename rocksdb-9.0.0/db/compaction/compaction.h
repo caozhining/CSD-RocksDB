@@ -98,6 +98,24 @@ class Compaction {
              BlobGarbageCollectionPolicy blob_garbage_collection_policy =
                  BlobGarbageCollectionPolicy::kUseDefault,
              double blob_garbage_collection_age_cutoff = -1);
+  
+  Compaction(VersionStorageInfo* input_version,
+             const ImmutableOptions& immutable_options,
+             const MutableCFOptions& mutable_cf_options,
+             const MutableDBOptions& mutable_db_options,
+             std::vector<CompactionInputFiles> inputs, int output_level,
+             uint64_t target_file_size, uint64_t max_compaction_bytes,
+             std::vector<uint32_t> output_path_id_meta, CompressionType compression,
+             CompressionOptions compression_opts,
+             Temperature output_temperature, uint32_t max_subcompactions,
+             std::vector<FileMetaData*> grandparents,
+             bool manual_compaction = false, const std::string& trim_ts = "",
+             double score = -1, bool deletion_compaction = false,
+             bool l0_files_might_overlap = true,
+             CompactionReason compaction_reason = CompactionReason::kUnknown,
+             BlobGarbageCollectionPolicy blob_garbage_collection_policy =
+                 BlobGarbageCollectionPolicy::kUseDefault,
+             double blob_garbage_collection_age_cutoff = -1);
 
   // The type of the penultimate level output range
   enum class PenultimateOutputRangeType : int {
@@ -194,6 +212,22 @@ class Compaction {
   const CompressionOptions& output_compression_opts() const {
     return output_compression_opts_;
   }
+
+  uint32_t get_new_output_path_id() {
+    if(output_path_id_meta_.size()>0){
+      if(output_level_==1){
+        output_path_id_ = (output_path_id_+1)%4;
+      }else{
+        while(output_path_id_meta_[output_path_id_]==0){
+          output_path_id_++;
+        }
+        output_path_id_meta_[output_path_id_]--;
+      } 
+    }
+    return output_path_id_;
+  }
+
+  std::vector<uint32_t> output_path_id_meta() const { return output_path_id_meta_; }
 
   // Whether need to write output file to second DB path.
   uint32_t output_path_id() const { return output_path_id_; }
@@ -501,7 +535,8 @@ class Compaction {
   ColumnFamilyData* cfd_;
   Arena arena_;  // Arena used to allocate space for file_levels_
 
-  const uint32_t output_path_id_;
+  std::vector<uint32_t> output_path_id_meta_;
+  uint32_t output_path_id_;
   CompressionType output_compression_;
   CompressionOptions output_compression_opts_;
   Temperature output_temperature_;

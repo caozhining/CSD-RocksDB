@@ -3423,8 +3423,18 @@ class Benchmark {
 
     Open(&open_options_);
     PrintHeader(open_options_);
+
     // open_options_.max_open_files=-1;  //123456test option maxfd
     // open_options_.max_subcompactions=16; //123456test option subcompaction
+
+    uint64_t target_size = 256 * 1024 * 1024 * 1024;
+    open_options_.cf_paths = {
+      DbPath("/mnt/smartssd/czn/raid_test0",target_size),
+      DbPath("/mnt/smartssd1/czn/raid_test1",target_size),
+      DbPath("/mnt/smartssd2/czn/raid_test2",target_size),
+      DbPath("/mnt/smartssd3/czn/raid_test3",target_size),
+    };
+
     std::stringstream benchmark_stream(FLAGS_benchmarks);
     std::string name;
     std::unique_ptr<ExpiredTimeFilter> filter;

@@ -422,8 +422,8 @@ Status DBImpl::FlushMemTableToOutputFile(
         immutable_db_options_.sst_file_manager.get());
     if (sfm) {
       // Notify sst_file_manager that a new file was added
-      std::string file_path = MakeTableFileName(
-          cfd->ioptions()->cf_paths[0].path, file_meta.fd.GetNumber());
+      std::string file_path = TableFileName(
+          cfd->ioptions()->cf_paths, file_meta.fd.GetNumber(), file_meta.fd.GetPathId());
       // TODO (PR7798).  We should only add the file to the FileManager if it
       // exists. Otherwise, some tests may fail.  Ignore the error in the
       // interim.
@@ -886,8 +886,8 @@ Status DBImpl::AtomicFlushMemTablesToOutputFiles(
       NotifyOnFlushCompleted(cfds[i], all_mutable_cf_options[i],
                              jobs[i]->GetCommittedFlushJobsInfo());
       if (sfm) {
-        std::string file_path = MakeTableFileName(
-            cfds[i]->ioptions()->cf_paths[0].path, file_meta[i].fd.GetNumber());
+        std::string file_path = TableFileName(
+            cfds[i]->ioptions()->cf_paths, file_meta[i].fd.GetNumber(), file_meta[i].fd.GetPathId());
         // TODO (PR7798).  We should only add the file to the FileManager if it
         // exists. Otherwise, some tests may fail.  Ignore the error in the
         // interim.

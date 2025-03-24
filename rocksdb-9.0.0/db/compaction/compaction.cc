@@ -395,6 +395,145 @@ Compaction::Compaction(
   PopulatePenultimateLevelOutputRange();
 }
 
+Compaction::Compaction(
+    VersionStorageInfo* vstorage, const ImmutableOptions& _immutable_options,
+    const MutableCFOptions& _mutable_cf_options,
+    const MutableDBOptions& _mutable_db_options,
+    std::vector<CompactionInputFiles> _inputs, int _output_level,
+    uint64_t _target_file_size, uint64_t _max_compaction_bytes,
+    std::vector<uint32_t> _output_path_id_meta, CompressionType _compression,
+    CompressionOptions _compression_opts, Temperature _output_temperature,
+    uint32_t _max_subcompactions, std::vector<FileMetaData*> _grandparents,
+    bool _manual_compaction, const std::string& _trim_ts, double _score,
+    bool _deletion_compaction, bool l0_files_might_overlap,
+    CompactionReason _compaction_reason,
+    BlobGarbageCollectionPolicy _blob_garbage_collection_policy,
+    double _blob_garbage_collection_age_cutoff)
+    : input_vstorage_(vstorage),
+      start_level_(_inputs[0].level),
+      output_level_(_output_level),
+      target_output_file_size_(_target_file_size),
+      max_compaction_bytes_(_max_compaction_bytes),
+      max_subcompactions_(_max_subcompactions),
+      immutable_options_(_immutable_options),
+      mutable_cf_options_(_mutable_cf_options),
+      input_version_(nullptr),
+      number_levels_(vstorage->num_levels()),
+      cfd_(nullptr),
+      // output_path_id_(_output_path_id),
+      output_compression_(_compression),
+      output_compression_opts_(_compression_opts),
+      output_temperature_(_output_temperature),
+      deletion_compaction_(_deletion_compaction),
+      l0_files_might_overlap_(l0_files_might_overlap),
+      inputs_(PopulateWithAtomicBoundaries(vstorage, std::move(_inputs))),
+      grandparents_(std::move(_grandparents)),
+      score_(_score),
+      bottommost_level_(
+          // For simplicity, we don't support the concept of "bottommost level"
+          // with
+          // `CompactionReason::kExternalSstIngestion` and
+          // `CompactionReason::kRefitLevel`
+          (_compaction_reason == CompactionReason::kExternalSstIngestion ||
+           _compaction_reason == CompactionReason::kRefitLevel)
+              ? false
+              : IsBottommostLevel(output_level_, vstorage, inputs_)),
+      is_full_compaction_(IsFullCompaction(vstorage, inputs_)),
+      is_manual_compaction_(_manual_compaction),
+      trim_ts_(_trim_ts),
+      is_trivial_move_(false),
+      compaction_reason_(_compaction_reason),
+      notify_on_compaction_completion_(false),
+      enable_blob_garbage_collection_(
+          _blob_garbage_collection_policy == BlobGarbageCollectionPolicy::kForce
+              ? true
+              : (_blob_garbage_collection_policy ==
+                         BlobGarbageCollectionPolicy::kDisable
+                     ? false
+                     : mutable_cf_options()->enable_blob_garbage_collection)),
+      blob_garbage_collection_age_cutoff_(
+          _blob_garbage_collection_age_cutoff < 0 ||
+                  _blob_garbage_collection_age_cutoff > 1
+              ? mutable_cf_options()->blob_garbage_collection_age_cutoff
+              : _blob_garbage_collection_age_cutoff),
+      penultimate_level_(
+          // For simplicity, we don't support the concept of "penultimate level"
+          // with `CompactionReason::kExternalSstIngestion` and
+          // `CompactionReason::kRefitLevel`
+          _compaction_reason == CompactionReason::kExternalSstIngestion ||
+                  _compaction_reason == CompactionReason::kRefitLevel
+              ? Compaction::kInvalidLevel
+              : EvaluatePenultimateLevel(vstorage, immutable_options_,
+                                         start_level_, output_level_)) {
+  
+  for(uint32_t i=0;i<_output_path_id_meta.size();i++)
+  {
+    if(_output_path_id_meta[i]>0){
+      output_path_id_ = i;
+      break;
+    }
+  }
+  output_path_id_meta_.resize(_output_path_id_meta.size());
+  for(uint32_t i=0;i<_output_path_id_meta.size();i++)
+  {
+    output_path_id_meta_[i] = _output_path_id_meta[i];
+  }
+  
+  MarkFilesBeingCompacted(true);
+  if (is_manual_compaction_) {
+    compaction_reason_ = CompactionReason::kManualCompaction;
+  }
+  if (max_subcompactions_ == 0) {
+    max_subcompactions_ = _mutable_db_options.max_subcompactions;
+  }
+
+  // for the non-bottommost levels, it tries to build files match the target
+  // file size, but not guaranteed. It could be 2x the size of the target size.
+  max_output_file_size_ = bottommost_level_ || grandparents_.empty()
+                              ? target_output_file_size_
+                              : 2 * target_output_file_size_;
+
+#ifndef NDEBUG
+  for (size_t i = 1; i < inputs_.size(); ++i) {
+    assert(inputs_[i].level > inputs_[i - 1].level);
+  }
+#endif
+
+  // setup input_levels_
+  {
+    input_levels_.resize(num_input_levels());
+    for (size_t which = 0; which < num_input_levels(); which++) {
+      DoGenerateLevelFilesBrief(&input_levels_[which], inputs_[which].files,
+                                &arena_);
+    }
+  }
+
+  GetBoundaryKeys(vstorage, inputs_, &smallest_user_key_, &largest_user_key_);
+
+  // Every compaction regardless of any compaction reason may respect the
+  // existing compact cursor in the output level to split output files
+  output_split_key_ = nullptr;
+  if (immutable_options_.compaction_style == kCompactionStyleLevel &&
+      immutable_options_.compaction_pri == kRoundRobin) {
+    const InternalKey* cursor =
+        &input_vstorage_->GetCompactCursors()[output_level_];
+    if (cursor->size() != 0) {
+      const Slice& cursor_user_key = ExtractUserKey(cursor->Encode());
+      auto ucmp = vstorage->InternalComparator()->user_comparator();
+      // May split output files according to the cursor if it in the user-key
+      // range
+      if (ucmp->CompareWithoutTimestamp(cursor_user_key, smallest_user_key_) >
+              0 &&
+          ucmp->CompareWithoutTimestamp(cursor_user_key, largest_user_key_) <=
+              0) {
+        output_split_key_ = cursor;
+      }
+    }
+  }
+
+  PopulatePenultimateLevelOutputRange();
+}
+
 void Compaction::PopulatePenultimateLevelOutputRange() {
   if (!SupportsPerKeyPlacement()) {
     return;

@@ -27,6 +27,8 @@ class LevelCompactionPicker : public CompactionPicker {
                              LogBuffer* log_buffer) override;
 
   bool NeedsCompaction(const VersionStorageInfo* vstorage) const override;
+
+  
 };
 
 }  // namespace ROCKSDB_NAMESPACE

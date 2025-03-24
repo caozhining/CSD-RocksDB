@@ -47,6 +47,8 @@
 #include "util/mutexlock.h"
 #include "util/stop_watch.h"
 
+#include<iostream> // czn
+
 namespace ROCKSDB_NAMESPACE {
 
 const char* GetFlushReasonString(FlushReason flush_reason) {
@@ -209,8 +211,16 @@ void FlushJob::PickMemTable() {
   edit_->SetColumnFamily(cfd_->GetID());
 
   // path 0 for level 0 file.
-  meta_.fd = FileDescriptor(versions_->NewFileNumber(), 0, 0);
+  int meta_file_path = cfd_->gen_next_l0_output_file_id();
+
+  printf("%d \n", meta_file_path);
+
+  meta_.fd = FileDescriptor(versions_->NewFileNumber(), meta_file_path, 0);
   meta_.epoch_number = cfd_->NewEpochNumber();
+
+  printf("%ld %d\n", meta_.fd.GetNumber(), meta_.fd.GetPathId());
+
+  // std::cout<<cfd_->cf_options->
 
   base_ = cfd_->current();
   base_->Ref();  // it is likely that we do not need this reference
@@ -1011,10 +1021,11 @@ Status FlushJob::WriteLevel0Table() {
     }
     ROCKS_LOG_BUFFER(log_buffer_,
                      "[%s] [JOB %d] Level-0 flush table #%" PRIu64 ": %" PRIu64
-                     " bytes %s"
+                     " bytes to cf_paths[%d] %s"
                      "%s",
                      cfd_->GetName().c_str(), job_context_->job_id,
                      meta_.fd.GetNumber(), meta_.fd.GetFileSize(),
+                     meta_.fd.GetPathId(),
                      s.ToString().c_str(),
                      meta_.marked_for_compaction ? " (needs compaction)" : "");
 
@@ -1109,7 +1120,7 @@ std::unique_ptr<FlushJobInfo> FlushJob::GetFlushJobInfo() const {
 
   const uint64_t file_number = meta_.fd.GetNumber();
   info->file_path =
-      MakeTableFileName(cfd_->ioptions()->cf_paths[0].path, file_number);
+      TableFileName(cfd_->ioptions()->cf_paths, file_number, meta_.fd.GetPathId());
   info->file_number = file_number;
   info->oldest_blob_file_number = meta_.oldest_blob_file_number;
   info->thread_id = db_options_.env->GetThreadID();
