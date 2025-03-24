@@ -168,8 +168,9 @@ CompactionJob::ProcessKeyValueCompactionWithCompactionService(
   for (const auto& file : compaction_result.output_files) {
     uint64_t file_num = versions_->NewFileNumber();
     auto src_file = compaction_result.output_path + "/" + file.file_name;
+    auto now_output_file_id = compact_->compaction->get_new_output_path_id();
     auto tgt_file = TableFileName(compaction->immutable_options()->cf_paths,
-                                  file_num, compaction->output_path_id());
+                                  file_num, now_output_file_id);
     s = fs_->RenameFile(src_file, tgt_file, IOOptions(), nullptr);
     if (!s.ok()) {
       sub_compact->status = s;
@@ -183,7 +184,7 @@ CompactionJob::ProcessKeyValueCompactionWithCompactionService(
       sub_compact->status = s;
       return CompactionServiceJobStatus::kFailure;
     }
-    meta.fd = FileDescriptor(file_num, compaction->output_path_id(), file_size,
+    meta.fd = FileDescriptor(file_num, now_output_file_id, file_size,
                              file.smallest_seqno, file.largest_seqno);
     meta.smallest.DecodeFrom(file.smallest_internal_key);
     meta.largest.DecodeFrom(file.largest_internal_key);

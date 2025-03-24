@@ -1669,7 +1669,8 @@ Status CompactionJob::FinishCompactionOutputFile(
   uint64_t oldest_blob_file_number = kInvalidBlobFileNumber;
   Status status_for_listener = s;
   if (meta != nullptr) {
-    fname = GetTableFileName(meta->fd.GetNumber());
+    // fname = GetTableFileName(meta->fd.GetNumber());
+    fname = TableFileName(sub_compact->compaction->immutable_options()->cf_paths, meta->fd.GetNumber(), meta->fd.GetPathId());
     output_fd = meta->fd;
     oldest_blob_file_number = meta->oldest_blob_file_number;
   } else {
@@ -1833,7 +1834,11 @@ Status CompactionJob::OpenCompactionOutputFile(SubcompactionState* sub_compact,
 
   // no need to lock because VersionSet::next_file_number_ is atomic
   uint64_t file_number = versions_->NewFileNumber();
-  std::string fname = GetTableFileName(file_number);
+  uint32_t file_path_id = compact_->compaction->get_new_output_path_id();
+
+  printf("Compaction output #%lld@L%d to path %d\n",file_number, compact_->compaction->output_level(), file_path_id);
+  std::string fname = TableFileName(compact_->compaction->immutable_options()->cf_paths, file_number, file_path_id);
+  // std::string fname = GetTableFileName(file_number);
   // Fire events.
   ColumnFamilyData* cfd = sub_compact->compaction->column_family_data();
   EventHelpers::NotifyTableFileCreationStarted(
@@ -1917,7 +1922,8 @@ Status CompactionJob::OpenCompactionOutputFile(SubcompactionState* sub_compact,
   {
     FileMetaData meta;
     meta.fd = FileDescriptor(file_number,
-                             sub_compact->compaction->output_path_id(), 0);
+                              // sub_compact->compaction->output_path_id(), 0);
+                             file_path_id, 0);
     meta.oldest_ancester_time = oldest_ancester_time;
     meta.file_creation_time = current_time;
     meta.epoch_number = epoch_number;

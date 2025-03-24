@@ -160,6 +160,10 @@ class LevelCompactionBuilder {
   static uint32_t GetPathId(const ImmutableCFOptions& ioptions,
                             const MutableCFOptions& mutable_cf_options,
                             int level);
+  
+  static std::vector<uint32_t> Array_Get_Path_ID(const CompactionInputFiles start_level_inputs_, const CompactionInputFiles output_level_inputs_, const ImmutableCFOptions& ioptions,
+                            // const MutableCFOptions& mutable_cf_options,
+                            int level, VersionStorageInfo* vstorage);
 
   static const int kMinFilesForIntraL0Compaction = 4;
 };
@@ -546,7 +550,8 @@ Compaction* LevelCompactionBuilder::GetCompaction() {
                           ioptions_.compaction_style, vstorage_->base_level(),
                           ioptions_.level_compaction_dynamic_level_bytes),
       mutable_cf_options_.max_compaction_bytes,
-      GetPathId(ioptions_, mutable_cf_options_, output_level_),
+      Array_Get_Path_ID(start_level_inputs_, output_level_inputs_, ioptions_, output_level_, vstorage_),
+      // GetPathId(ioptions_, mutable_cf_options_, output_level_),
       GetCompressionType(vstorage_, mutable_cf_options_, output_level_,
                          vstorage_->base_level()),
       GetCompressionOptions(mutable_cf_options_, vstorage_, output_level_),
@@ -619,6 +624,174 @@ uint32_t LevelCompactionBuilder::GetPathId(
     current_path_size = ioptions.cf_paths[p].target_size;
   }
   return p;
+}
+
+std::vector<uint32_t> LevelCompactionBuilder::Array_Get_Path_ID(
+  const CompactionInputFiles start_level_inputs_,
+  const CompactionInputFiles output_level_inputs_,
+  const ImmutableCFOptions& ioptions,
+  // const MutableCFOptions& mutable_cf_options, 
+  int level,
+  VersionStorageInfo* vstorage
+) {
+  uint32_t left_boundary = 9999;
+  uint32_t right_boundary = 0;
+  uint32_t cf_paths_sum = ioptions.cf_paths.size();
+  std::vector<uint32_t> result;
+
+  result.resize(cf_paths_sum);
+
+  Slice cf_paths_smallest_user_key[cf_paths_sum];
+  Slice cf_paths_largest_user_key[cf_paths_sum];
+
+  uint32_t file_count[cf_paths_sum];
+
+  for (uint32_t i = 0 ;i <cf_paths_sum; i++){
+    file_count[i] = 0;
+  }
+
+  for (const auto file : vstorage->LevelFiles(level)){
+    Slice file_smallest_user_key = file->smallest.user_key();
+    Slice file_largest_user_key = file->largest.user_key();
+    uint32_t file_path_id = file->fd.GetPathId();
+
+    file_count[file_path_id]++;
+    // printf("bianli bufen now path id %d file number %d\n", file_path_id, file->fd.GetNumber());
+
+    if(cf_paths_smallest_user_key[file_path_id].empty()){
+      cf_paths_smallest_user_key[file_path_id]=file_smallest_user_key;
+    }
+    else{
+      if(cf_paths_smallest_user_key[file_path_id].compare(file_smallest_user_key)>0){
+        cf_paths_smallest_user_key[file_path_id]=file_smallest_user_key;
+      }
+    }
+
+    if(cf_paths_largest_user_key[file_path_id].empty()){
+      cf_paths_largest_user_key[file_path_id]=file_largest_user_key;
+    }
+    else{
+      if(cf_paths_largest_user_key[file_path_id].compare(file_largest_user_key)<0){
+        cf_paths_largest_user_key[file_path_id]=file_largest_user_key;
+      }
+    }
+  }
+  
+  for (const auto& file : output_level_inputs_.files) {
+    uint32_t file_path_id = file->fd.GetPathId();
+    file_count[file_path_id]--;
+    if(file_path_id < left_boundary){
+      left_boundary = file_path_id;
+    }
+    if(file_path_id > right_boundary){
+      right_boundary = file_path_id;
+    }
+    // printf("now path id %d file number %d\n", file_path_id, file->fd.GetNumber());
+  }
+
+  bool left_expand = false;
+  bool right_expand = false;
+  for (const auto& file : output_level_inputs_.files) {
+    uint32_t file_path_id = file->fd.GetPathId();
+    if(left_boundary == file_path_id && cf_paths_smallest_user_key[file_path_id]==file->smallest.user_key()){
+      left_expand = true;
+      // printf("left expand\n");
+    }
+    if(right_boundary == file_path_id && cf_paths_largest_user_key[file_path_id]==file->largest.user_key()){
+      right_expand = true;
+      // printf("right expand\n");
+    }
+    // printf("now path id %d file number %d\n", file_path_id, file->fd.GetNumber());
+  }
+
+  if(left_boundary == 9999 && right_boundary == 0){
+    left_boundary = 0;
+    right_boundary = cf_paths_sum - 1;
+  }else{
+    if(left_expand){
+      while(left_boundary>0){
+        left_boundary--;
+        if(left_boundary>0){
+          if(file_count[left_boundary-1]>0)
+            break;
+        }
+      }
+    }
+    if(right_expand){
+      while(right_boundary<cf_paths_sum-1){
+        right_boundary++;
+        if(right_boundary<cf_paths_sum){
+          if(file_count[right_boundary+1]>0)
+            break;
+        }
+      }
+    }
+  }
+  printf("left boundary: %d | right boundart: %d\n", left_boundary, right_boundary);
+
+  printf("result: ");
+  uint32_t tot_file_sum = start_level_inputs_.size() + output_level_inputs_.size();
+  uint32_t valid_path_num = right_boundary - left_boundary + 1;
+  for(uint32_t i=0; i<cf_paths_sum; i++){
+    // if(i>=left_boundary && i<=right_boundary){
+      // result[i] = tot_file_sum/valid_path_num;
+      // result[i] = 2;
+    // }else{
+      result[i] = 0;
+    // }
+    // printf("%d ",result[i]);
+  }
+  if(valid_path_num>1 && level>1){
+    uint32_t delta_limit[cf_paths_sum];
+    float min_sum = 99999999;
+    for(uint32_t i=0; i<cf_paths_sum; i++){
+      if(i>=left_boundary && i<=right_boundary){
+        delta_limit[i] = tot_file_sum;
+      }else{
+        delta_limit[i] = 0;
+      }
+    }
+    int a0 = file_count[0];
+    int a1 = file_count[1];
+    int a2 = file_count[2];
+    int a3 = file_count[3];
+    int res_c0 = 0;
+    int res_c1 = 0;
+    int res_c2 = 0;
+    int res_c3 = 0;
+    for (int c0 = 0; c0<=tot_file_sum && c0<=delta_limit[0]; c0++)
+        for (int c1 = 0; c1<=tot_file_sum-c0 && c1<=delta_limit[1]; c1++)
+            for (int c2 = 0; c2<=tot_file_sum-c0-c1 && c2<=delta_limit[2]; c2++){
+                int c3 = tot_file_sum - c0 - c1 - c2;
+                if(c3>delta_limit[3])continue;
+
+                float sum1 = a0 + c0 - ((float)(a1+a2+a3+c1+c2+c3))/3;
+                float sum2 = ((float)(a0+a1+c0+c1))/2 - ((float)(a2+a3+c2+c3))/2;
+                float sum3 = ((float)(a0+a1+a2+c0+c1+c2))/3 - a3-c3;
+
+                float sum = sum1 * sum1 + sum2 * sum2 + sum3 * sum3;
+                if(sum<min_sum)
+                {
+                    min_sum = sum;
+                    res_c0 = c0;
+                    res_c1 = c1;
+                    res_c2 = c2;
+                    res_c3 = c3;
+                }   
+            }
+    result[0] = res_c0;
+    result[1] = res_c1;
+    result[2] = res_c2;
+    result[3] = res_c3;
+  }
+  printf("file pos allocate: %d %d %d %d\n", file_count[0], file_count[1], file_count[2], file_count[3]);
+  printf("output file allocate: %d %d %d %d\n", result[0], result[1], result[2], result[3]);
+  result[right_boundary] = 99999;
+  printf("\n");
+  // assert(output_level_inputs_.level==level);
+  // assert(left_boundary>cf_paths_sum);
+  // Todo
+  return result;
 }
 
 bool LevelCompactionBuilder::TryPickL0TrivialMove() {
