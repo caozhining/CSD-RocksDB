@@ -41,6 +41,8 @@
 #include "util/cast_util.h"
 #include "util/compression.h"
 
+#include<iostream> //czn
+
 namespace ROCKSDB_NAMESPACE {
 
 ColumnFamilyHandleImpl::ColumnFamilyHandleImpl(
@@ -570,6 +572,13 @@ ColumnFamilyData::ColumnFamilyData(
     }
   }
   Ref();
+
+  set_cf_path_sum(cf_options.cf_paths.size());
+
+  for(long unsigned int i=0;i<cf_options.cf_paths.size();i++)
+  {
+    std::cout<<cf_options.cf_paths[i].path<<"\n";
+  }
 
   // Convert user defined table properties collector factories to internal ones.
   GetInternalTblPropCollFactory(ioptions_, &internal_tbl_prop_coll_factories_);

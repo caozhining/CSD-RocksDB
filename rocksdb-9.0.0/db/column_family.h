@@ -555,6 +555,7 @@ class ColumnFamilyData {
   // of its files (if missing)
   void RecoverEpochNumbers();
 
+
   cl::Device Compaction_accelerator_device;
   cl::Context Compaction_csd_context;
   cl::CommandQueue Compaction_csd_queue;
@@ -564,6 +565,14 @@ class ColumnFamilyData {
   cl::Buffer output_datablock_buffer;
   cl::Buffer output_indexblock_buffer;
   cl::Buffer output_metadata_buffer;
+
+  void set_cf_path_sum(int cf_path_sum){ cf_path_sum_ = cf_path_sum; }
+
+  int gen_next_l0_output_file_id(){ 
+    l0_output_file_id = (l0_output_file_id + 1) % cf_path_sum_; 
+    return l0_output_file_id;
+  } 
+
 
  private:
   friend class ColumnFamilySet;
@@ -579,6 +588,9 @@ class ColumnFamilyData {
                    const std::string& db_id, const std::string& db_session_id);
 
   std::vector<std::string> GetDbPaths() const;
+
+  int l0_output_file_id = 0;
+  int cf_path_sum_ = 1;
 
   uint32_t id_;
   const std::string name_;

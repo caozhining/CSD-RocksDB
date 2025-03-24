@@ -1,0 +1,652 @@
+diff --git a/Makefile b/Makefile
+index 976dc52..758d614 100644
+--- a/Makefile
++++ b/Makefile
+@@ -548,7 +548,7 @@ ifeq ($(PLATFORM), OS_OPENBSD)
+ endif
+ 
+ ifndef DISABLE_WARNING_AS_ERROR
+-	WARNING_FLAGS += -Werror
++	# WARNING_FLAGS += -Werror
+ endif
+ 
+ 
+diff --git a/db/column_family.cc b/db/column_family.cc
+index 94830ce..52f1a9e 100644
+--- a/db/column_family.cc
++++ b/db/column_family.cc
+@@ -41,6 +41,8 @@
+ #include "util/cast_util.h"
+ #include "util/compression.h"
+ 
++#include<iostream> //czn
++
+ namespace ROCKSDB_NAMESPACE {
+ 
+ ColumnFamilyHandleImpl::ColumnFamilyHandleImpl(
+@@ -571,6 +573,13 @@ ColumnFamilyData::ColumnFamilyData(
+   }
+   Ref();
+ 
++  set_cf_path_sum(cf_options.cf_paths.size());
++
++  for(long unsigned int i=0;i<cf_options.cf_paths.size();i++)
++  {
++    std::cout<<cf_options.cf_paths[i].path<<"\n";
++  }
++
+   // Convert user defined table properties collector factories to internal ones.
+   GetInternalTblPropCollFactory(ioptions_, &internal_tbl_prop_coll_factories_);
+ 
+diff --git a/db/column_family.h b/db/column_family.h
+index ce05c45..471f398 100644
+--- a/db/column_family.h
++++ b/db/column_family.h
+@@ -548,6 +548,13 @@ class ColumnFamilyData {
+   // of its files (if missing)
+   void RecoverEpochNumbers();
+ 
++  void set_cf_path_sum(int cf_path_sum){ cf_path_sum_ = cf_path_sum; }
++
++  int gen_next_l0_output_file_id(){ 
++    l0_output_file_id = (l0_output_file_id + 1) % cf_path_sum_; 
++    return l0_output_file_id;
++  } 
++
+  private:
+   friend class ColumnFamilySet;
+   ColumnFamilyData(uint32_t id, const std::string& name,
+@@ -563,6 +570,9 @@ class ColumnFamilyData {
+ 
+   std::vector<std::string> GetDbPaths() const;
+ 
++  int l0_output_file_id = 0;
++  int cf_path_sum_ = 1;
++
+   uint32_t id_;
+   const std::string name_;
+   Version* dummy_versions_;  // Head of circular doubly-linked list of versions.
+diff --git a/db/compaction/compaction.cc b/db/compaction/compaction.cc
+index d39f47e..85c4519 100644
+--- a/db/compaction/compaction.cc
++++ b/db/compaction/compaction.cc
+@@ -395,6 +395,145 @@ Compaction::Compaction(
+   PopulatePenultimateLevelOutputRange();
+ }
+ 
++Compaction::Compaction(
++    VersionStorageInfo* vstorage, const ImmutableOptions& _immutable_options,
++    const MutableCFOptions& _mutable_cf_options,
++    const MutableDBOptions& _mutable_db_options,
++    std::vector<CompactionInputFiles> _inputs, int _output_level,
++    uint64_t _target_file_size, uint64_t _max_compaction_bytes,
++    std::vector<uint32_t> _output_path_id_meta, CompressionType _compression,
++    CompressionOptions _compression_opts, Temperature _output_temperature,
++    uint32_t _max_subcompactions, std::vector<FileMetaData*> _grandparents,
++    bool _manual_compaction, const std::string& _trim_ts, double _score,
++    bool _deletion_compaction, bool l0_files_might_overlap,
++    CompactionReason _compaction_reason,
++    BlobGarbageCollectionPolicy _blob_garbage_collection_policy,
++    double _blob_garbage_collection_age_cutoff)
++    : input_vstorage_(vstorage),
++      start_level_(_inputs[0].level),
++      output_level_(_output_level),
++      target_output_file_size_(_target_file_size),
++      max_compaction_bytes_(_max_compaction_bytes),
++      max_subcompactions_(_max_subcompactions),
++      immutable_options_(_immutable_options),
++      mutable_cf_options_(_mutable_cf_options),
++      input_version_(nullptr),
++      number_levels_(vstorage->num_levels()),
++      cfd_(nullptr),
++      // output_path_id_(_output_path_id),
++      output_compression_(_compression),
++      output_compression_opts_(_compression_opts),
++      output_temperature_(_output_temperature),
++      deletion_compaction_(_deletion_compaction),
++      l0_files_might_overlap_(l0_files_might_overlap),
++      inputs_(PopulateWithAtomicBoundaries(vstorage, std::move(_inputs))),
++      grandparents_(std::move(_grandparents)),
++      score_(_score),
++      bottommost_level_(
++          // For simplicity, we don't support the concept of "bottommost level"
++          // with
++          // `CompactionReason::kExternalSstIngestion` and
++          // `CompactionReason::kRefitLevel`
++          (_compaction_reason == CompactionReason::kExternalSstIngestion ||
++           _compaction_reason == CompactionReason::kRefitLevel)
++              ? false
++              : IsBottommostLevel(output_level_, vstorage, inputs_)),
++      is_full_compaction_(IsFullCompaction(vstorage, inputs_)),
++      is_manual_compaction_(_manual_compaction),
++      trim_ts_(_trim_ts),
++      is_trivial_move_(false),
++      compaction_reason_(_compaction_reason),
++      notify_on_compaction_completion_(false),
++      enable_blob_garbage_collection_(
++          _blob_garbage_collection_policy == BlobGarbageCollectionPolicy::kForce
++              ? true
++              : (_blob_garbage_collection_policy ==
++                         BlobGarbageCollectionPolicy::kDisable
++                     ? false
++                     : mutable_cf_options()->enable_blob_garbage_collection)),
++      blob_garbage_collection_age_cutoff_(
++          _blob_garbage_collection_age_cutoff < 0 ||
++                  _blob_garbage_collection_age_cutoff > 1
++              ? mutable_cf_options()->blob_garbage_collection_age_cutoff
++              : _blob_garbage_collection_age_cutoff),
++      penultimate_level_(
++          // For simplicity, we don't support the concept of "penultimate level"
++          // with `CompactionReason::kExternalSstIngestion` and
++          // `CompactionReason::kRefitLevel`
++          _compaction_reason == CompactionReason::kExternalSstIngestion ||
++                  _compaction_reason == CompactionReason::kRefitLevel
++              ? Compaction::kInvalidLevel
++              : EvaluatePenultimateLevel(vstorage, immutable_options_,
++                                         start_level_, output_level_)) {
++  
++  for(uint32_t i=0;i<_output_path_id_meta.size();i++)
++  {
++    if(_output_path_id_meta[i]>0){
++      output_path_id_ = i;
++      break;
++    }
++  }
++  output_path_id_meta_.resize(_output_path_id_meta.size());
++  for(uint32_t i=0;i<_output_path_id_meta.size();i++)
++  {
++    output_path_id_meta_[i] = _output_path_id_meta[i];
++  }
++  
++  MarkFilesBeingCompacted(true);
++  if (is_manual_compaction_) {
++    compaction_reason_ = CompactionReason::kManualCompaction;
++  }
++  if (max_subcompactions_ == 0) {
++    max_subcompactions_ = _mutable_db_options.max_subcompactions;
++  }
++
++  // for the non-bottommost levels, it tries to build files match the target
++  // file size, but not guaranteed. It could be 2x the size of the target size.
++  max_output_file_size_ = bottommost_level_ || grandparents_.empty()
++                              ? target_output_file_size_
++                              : 2 * target_output_file_size_;
++
++#ifndef NDEBUG
++  for (size_t i = 1; i < inputs_.size(); ++i) {
++    assert(inputs_[i].level > inputs_[i - 1].level);
++  }
++#endif
++
++  // setup input_levels_
++  {
++    input_levels_.resize(num_input_levels());
++    for (size_t which = 0; which < num_input_levels(); which++) {
++      DoGenerateLevelFilesBrief(&input_levels_[which], inputs_[which].files,
++                                &arena_);
++    }
++  }
++
++  GetBoundaryKeys(vstorage, inputs_, &smallest_user_key_, &largest_user_key_);
++
++  // Every compaction regardless of any compaction reason may respect the
++  // existing compact cursor in the output level to split output files
++  output_split_key_ = nullptr;
++  if (immutable_options_.compaction_style == kCompactionStyleLevel &&
++      immutable_options_.compaction_pri == kRoundRobin) {
++    const InternalKey* cursor =
++        &input_vstorage_->GetCompactCursors()[output_level_];
++    if (cursor->size() != 0) {
++      const Slice& cursor_user_key = ExtractUserKey(cursor->Encode());
++      auto ucmp = vstorage->InternalComparator()->user_comparator();
++      // May split output files according to the cursor if it in the user-key
++      // range
++      if (ucmp->CompareWithoutTimestamp(cursor_user_key, smallest_user_key_) >
++              0 &&
++          ucmp->CompareWithoutTimestamp(cursor_user_key, largest_user_key_) <=
++              0) {
++        output_split_key_ = cursor;
++      }
++    }
++  }
++
++  PopulatePenultimateLevelOutputRange();
++}
++
+ void Compaction::PopulatePenultimateLevelOutputRange() {
+   if (!SupportsPerKeyPlacement()) {
+     return;
+diff --git a/db/compaction/compaction.h b/db/compaction/compaction.h
+index e625137..a1498f0 100644
+--- a/db/compaction/compaction.h
++++ b/db/compaction/compaction.h
+@@ -97,6 +97,24 @@ class Compaction {
+              BlobGarbageCollectionPolicy blob_garbage_collection_policy =
+                  BlobGarbageCollectionPolicy::kUseDefault,
+              double blob_garbage_collection_age_cutoff = -1);
++  
++  Compaction(VersionStorageInfo* input_version,
++             const ImmutableOptions& immutable_options,
++             const MutableCFOptions& mutable_cf_options,
++             const MutableDBOptions& mutable_db_options,
++             std::vector<CompactionInputFiles> inputs, int output_level,
++             uint64_t target_file_size, uint64_t max_compaction_bytes,
++             std::vector<uint32_t> output_path_id_meta, CompressionType compression,
++             CompressionOptions compression_opts,
++             Temperature output_temperature, uint32_t max_subcompactions,
++             std::vector<FileMetaData*> grandparents,
++             bool manual_compaction = false, const std::string& trim_ts = "",
++             double score = -1, bool deletion_compaction = false,
++             bool l0_files_might_overlap = true,
++             CompactionReason compaction_reason = CompactionReason::kUnknown,
++             BlobGarbageCollectionPolicy blob_garbage_collection_policy =
++                 BlobGarbageCollectionPolicy::kUseDefault,
++             double blob_garbage_collection_age_cutoff = -1);
+ 
+   // The type of the penultimate level output range
+   enum class PenultimateOutputRangeType : int {
+@@ -194,6 +212,22 @@ class Compaction {
+     return output_compression_opts_;
+   }
+ 
++  uint32_t get_new_output_path_id() {
++    if(output_path_id_meta_.size()>0){
++      if(output_level_==1){
++        output_path_id_ = (output_path_id_+1)%4;
++      }else{
++        while(output_path_id_meta_[output_path_id_]==0){
++          output_path_id_++;
++        }
++        output_path_id_meta_[output_path_id_]--;
++      } 
++    }
++    return output_path_id_;
++  }
++
++  std::vector<uint32_t> output_path_id_meta() const { return output_path_id_meta_; }
++
+   // Whether need to write output file to second DB path.
+   uint32_t output_path_id() const { return output_path_id_; }
+ 
+@@ -491,7 +525,8 @@ class Compaction {
+   ColumnFamilyData* cfd_;
+   Arena arena_;  // Arena used to allocate space for file_levels_
+ 
+-  const uint32_t output_path_id_;
++  std::vector<uint32_t> output_path_id_meta_;
++  uint32_t output_path_id_;
+   CompressionType output_compression_;
+   CompressionOptions output_compression_opts_;
+   Temperature output_temperature_;
+diff --git a/db/compaction/compaction_job.cc b/db/compaction/compaction_job.cc
+index 931716f..116af85 100644
+--- a/db/compaction/compaction_job.cc
++++ b/db/compaction/compaction_job.cc
+@@ -1669,7 +1669,8 @@ Status CompactionJob::FinishCompactionOutputFile(
+   uint64_t oldest_blob_file_number = kInvalidBlobFileNumber;
+   Status status_for_listener = s;
+   if (meta != nullptr) {
+-    fname = GetTableFileName(meta->fd.GetNumber());
++    // fname = GetTableFileName(meta->fd.GetNumber());
++    fname = TableFileName(sub_compact->compaction->immutable_options()->cf_paths, meta->fd.GetNumber(), meta->fd.GetPathId());
+     output_fd = meta->fd;
+     oldest_blob_file_number = meta->oldest_blob_file_number;
+   } else {
+@@ -1833,7 +1834,11 @@ Status CompactionJob::OpenCompactionOutputFile(SubcompactionState* sub_compact,
+ 
+   // no need to lock because VersionSet::next_file_number_ is atomic
+   uint64_t file_number = versions_->NewFileNumber();
+-  std::string fname = GetTableFileName(file_number);
++  uint32_t file_path_id = compact_->compaction->get_new_output_path_id();
++
++  printf("Compaction output #%lld@L%d to path %d\n",file_number, compact_->compaction->output_level(), file_path_id);
++  std::string fname = TableFileName(compact_->compaction->immutable_options()->cf_paths, file_number, file_path_id);
++  // std::string fname = GetTableFileName(file_number);
+   // Fire events.
+   ColumnFamilyData* cfd = sub_compact->compaction->column_family_data();
+   EventHelpers::NotifyTableFileCreationStarted(
+@@ -1917,7 +1922,8 @@ Status CompactionJob::OpenCompactionOutputFile(SubcompactionState* sub_compact,
+   {
+     FileMetaData meta;
+     meta.fd = FileDescriptor(file_number,
+-                             sub_compact->compaction->output_path_id(), 0);
++                              // sub_compact->compaction->output_path_id(), 0);
++                             file_path_id, 0);
+     meta.oldest_ancester_time = oldest_ancester_time;
+     meta.file_creation_time = current_time;
+     meta.epoch_number = epoch_number;
+diff --git a/db/compaction/compaction_picker_level.cc b/db/compaction/compaction_picker_level.cc
+index 328baa9..f835578 100644
+--- a/db/compaction/compaction_picker_level.cc
++++ b/db/compaction/compaction_picker_level.cc
+@@ -160,6 +160,10 @@ class LevelCompactionBuilder {
+   static uint32_t GetPathId(const ImmutableCFOptions& ioptions,
+                             const MutableCFOptions& mutable_cf_options,
+                             int level);
++  
++  static std::vector<uint32_t> Array_Get_Path_ID(const CompactionInputFiles start_level_inputs_, const CompactionInputFiles output_level_inputs_, const ImmutableCFOptions& ioptions,
++                            // const MutableCFOptions& mutable_cf_options,
++                            int level, VersionStorageInfo* vstorage);
+ 
+   static const int kMinFilesForIntraL0Compaction = 4;
+ };
+@@ -546,7 +550,8 @@ Compaction* LevelCompactionBuilder::GetCompaction() {
+                           ioptions_.compaction_style, vstorage_->base_level(),
+                           ioptions_.level_compaction_dynamic_level_bytes),
+       mutable_cf_options_.max_compaction_bytes,
+-      GetPathId(ioptions_, mutable_cf_options_, output_level_),
++      Array_Get_Path_ID(start_level_inputs_, output_level_inputs_, ioptions_, output_level_, vstorage_),
++      // GetPathId(ioptions_, mutable_cf_options_, output_level_),
+       GetCompressionType(vstorage_, mutable_cf_options_, output_level_,
+                          vstorage_->base_level()),
+       GetCompressionOptions(mutable_cf_options_, vstorage_, output_level_),
+@@ -621,6 +626,174 @@ uint32_t LevelCompactionBuilder::GetPathId(
+   return p;
+ }
+ 
++std::vector<uint32_t> LevelCompactionBuilder::Array_Get_Path_ID(
++  const CompactionInputFiles start_level_inputs_,
++  const CompactionInputFiles output_level_inputs_,
++  const ImmutableCFOptions& ioptions,
++  // const MutableCFOptions& mutable_cf_options, 
++  int level,
++  VersionStorageInfo* vstorage
++) {
++  uint32_t left_boundary = 9999;
++  uint32_t right_boundary = 0;
++  uint32_t cf_paths_sum = ioptions.cf_paths.size();
++  std::vector<uint32_t> result;
++
++  result.resize(cf_paths_sum);
++
++  Slice cf_paths_smallest_user_key[cf_paths_sum];
++  Slice cf_paths_largest_user_key[cf_paths_sum];
++
++  uint32_t file_count[cf_paths_sum];
++
++  for (uint32_t i = 0 ;i <cf_paths_sum; i++){
++    file_count[i] = 0;
++  }
++
++  for (const auto file : vstorage->LevelFiles(level)){
++    Slice file_smallest_user_key = file->smallest.user_key();
++    Slice file_largest_user_key = file->largest.user_key();
++    uint32_t file_path_id = file->fd.GetPathId();
++
++    file_count[file_path_id]++;
++    printf("bianli bufen now path id %d file number %d\n", file_path_id, file->fd.GetNumber());
++
++    if(cf_paths_smallest_user_key[file_path_id].empty()){
++      cf_paths_smallest_user_key[file_path_id]=file_smallest_user_key;
++    }
++    else{
++      if(cf_paths_smallest_user_key[file_path_id].compare(file_smallest_user_key)>0){
++        cf_paths_smallest_user_key[file_path_id]=file_smallest_user_key;
++      }
++    }
++
++    if(cf_paths_largest_user_key[file_path_id].empty()){
++      cf_paths_largest_user_key[file_path_id]=file_largest_user_key;
++    }
++    else{
++      if(cf_paths_largest_user_key[file_path_id].compare(file_largest_user_key)<0){
++        cf_paths_largest_user_key[file_path_id]=file_largest_user_key;
++      }
++    }
++  }
++  
++  for (const auto& file : output_level_inputs_.files) {
++    uint32_t file_path_id = file->fd.GetPathId();
++    file_count[file_path_id]--;
++    if(file_path_id < left_boundary){
++      left_boundary = file_path_id;
++    }
++    if(file_path_id > right_boundary){
++      right_boundary = file_path_id;
++    }
++    printf("now path id %d file number %d\n", file_path_id, file->fd.GetNumber());
++  }
++
++  bool left_expand = false;
++  bool right_expand = false;
++  for (const auto& file : output_level_inputs_.files) {
++    uint32_t file_path_id = file->fd.GetPathId();
++    if(left_boundary == file_path_id && cf_paths_smallest_user_key[file_path_id]==file->smallest.user_key()){
++      left_expand = true;
++      printf("left expand\n");
++    }
++    if(right_boundary == file_path_id && cf_paths_largest_user_key[file_path_id]==file->largest.user_key()){
++      right_expand = true;
++      printf("right expand\n");
++    }
++    printf("now path id %d file number %d\n", file_path_id, file->fd.GetNumber());
++  }
++
++  if(left_boundary == 9999 && right_boundary == 0){
++    left_boundary = 0;
++    right_boundary = cf_paths_sum - 1;
++  }else{
++    if(left_expand){
++      while(left_boundary>0){
++        left_boundary--;
++        if(left_boundary>0){
++          if(file_count[left_boundary-1]>0)
++            break;
++        }
++      }
++    }
++    if(right_expand){
++      while(right_boundary<cf_paths_sum-1){
++        right_boundary++;
++        if(right_boundary<cf_paths_sum){
++          if(file_count[right_boundary+1]>0)
++            break;
++        }
++      }
++    }
++  }
++  printf("left boundary: %d | right boundart: %d\n", left_boundary, right_boundary);
++
++  printf("result: ");
++  uint32_t tot_file_sum = start_level_inputs_.size() + output_level_inputs_.size();
++  uint32_t valid_path_num = right_boundary - left_boundary + 1;
++  for(uint32_t i=0; i<cf_paths_sum; i++){
++    // if(i>=left_boundary && i<=right_boundary){
++    //   result[i] = tot_file_sum/valid_path_num;
++    //   // result[i] = 2;
++    // }else{
++      result[i] = 0;
++    // }
++    // printf("%d ",result[i]);
++  }
++  if(valid_path_num>1){
++    uint32_t delta_limit[cf_paths_sum];
++    float min_sum = 99999999;
++    for(uint32_t i=0; i<cf_paths_sum; i++){
++      if(i>=left_boundary && i<=right_boundary){
++        delta_limit[i] = tot_file_sum;
++      }else{
++        delta_limit[i] = 0;
++      }
++    }
++    int a0 = file_count[0];
++    int a1 = file_count[1];
++    int a2 = file_count[2];
++    int a3 = file_count[3];
++    int res_c0 = 0;
++    int res_c1 = 0;
++    int res_c2 = 0;
++    int res_c3 = 0;
++    for (int c0 = 0; c0<=tot_file_sum && c0<=delta_limit[0]; c0++)
++        for (int c1 = 0; c1<=tot_file_sum-c0 && c1<=delta_limit[1]; c1++)
++            for (int c2 = 0; c2<=tot_file_sum-c0-c1 && c2<=delta_limit[2]; c2++){
++                int c3 = tot_file_sum - c0 - c1 - c2;
++                if(c3>delta_limit[3])continue;
++
++                float sum1 = a0 + c0 - ((float)(a1+a2+a3+c1+c2+c3))/3;
++                float sum2 = ((float)(a0+a1+c0+c1))/2 - ((float)(a2+a3+c2+c3))/2;
++                float sum3 = ((float)(a0+a1+a2+c0+c1+c2))/3 - a3-c3;
++
++                float sum = sum1 * sum1 + sum2 * sum2 + sum3 * sum3;
++                if(sum<min_sum)
++                {
++                    min_sum = sum;
++                    res_c0 = c0;
++                    res_c1 = c1;
++                    res_c2 = c2;
++                    res_c3 = c3;
++                }   
++            }
++    result[0] = res_c0;
++    result[1] = res_c1;
++    result[2] = res_c2;
++    result[3] = res_c3;
++  }
++  printf("file pos allocate: %d %d %d %d\n", file_count[0], file_count[1], file_count[2], file_count[3]);
++  printf("output file allocate: %d %d %d %d\n", result[0], result[1], result[2], result[3]);
++  result[right_boundary] = 99999;
++  printf("\n");
++  // assert(output_level_inputs_.level==level);
++  // assert(left_boundary>cf_paths_sum);
++  // Todo
++  return result;
++}
++
+ bool LevelCompactionBuilder::TryPickL0TrivialMove() {
+   if (vstorage_->base_level() <= 0) {
+     return false;
+diff --git a/db/compaction/compaction_picker_level.h b/db/compaction/compaction_picker_level.h
+index e822e33..a94d7b0 100644
+--- a/db/compaction/compaction_picker_level.h
++++ b/db/compaction/compaction_picker_level.h
+@@ -27,6 +27,8 @@ class LevelCompactionPicker : public CompactionPicker {
+                              LogBuffer* log_buffer) override;
+ 
+   bool NeedsCompaction(const VersionStorageInfo* vstorage) const override;
++
++  
+ };
+ 
+ }  // namespace ROCKSDB_NAMESPACE
+diff --git a/db/compaction/compaction_service_job.cc b/db/compaction/compaction_service_job.cc
+index 442eaf8..1a788a7 100644
+--- a/db/compaction/compaction_service_job.cc
++++ b/db/compaction/compaction_service_job.cc
+@@ -168,8 +168,9 @@ CompactionJob::ProcessKeyValueCompactionWithCompactionService(
+   for (const auto& file : compaction_result.output_files) {
+     uint64_t file_num = versions_->NewFileNumber();
+     auto src_file = compaction_result.output_path + "/" + file.file_name;
++    auto now_output_file_id = compact_->compaction->get_new_output_path_id();
+     auto tgt_file = TableFileName(compaction->immutable_options()->cf_paths,
+-                                  file_num, compaction->output_path_id());
++                                  file_num, now_output_file_id);
+     s = fs_->RenameFile(src_file, tgt_file, IOOptions(), nullptr);
+     if (!s.ok()) {
+       sub_compact->status = s;
+@@ -183,7 +184,7 @@ CompactionJob::ProcessKeyValueCompactionWithCompactionService(
+       sub_compact->status = s;
+       return CompactionServiceJobStatus::kFailure;
+     }
+-    meta.fd = FileDescriptor(file_num, compaction->output_path_id(), file_size,
++    meta.fd = FileDescriptor(file_num, now_output_file_id, file_size,
+                              file.smallest_seqno, file.largest_seqno);
+     meta.smallest.DecodeFrom(file.smallest_internal_key);
+     meta.largest.DecodeFrom(file.largest_internal_key);
+diff --git a/db/db_impl/db_impl_compaction_flush.cc b/db/db_impl/db_impl_compaction_flush.cc
+index fd73dd4..29165b0 100644
+--- a/db/db_impl/db_impl_compaction_flush.cc
++++ b/db/db_impl/db_impl_compaction_flush.cc
+@@ -422,8 +422,8 @@ Status DBImpl::FlushMemTableToOutputFile(
+         immutable_db_options_.sst_file_manager.get());
+     if (sfm) {
+       // Notify sst_file_manager that a new file was added
+-      std::string file_path = MakeTableFileName(
+-          cfd->ioptions()->cf_paths[0].path, file_meta.fd.GetNumber());
++      std::string file_path = TableFileName(
++          cfd->ioptions()->cf_paths, file_meta.fd.GetNumber(), file_meta.fd.GetPathId());
+       // TODO (PR7798).  We should only add the file to the FileManager if it
+       // exists. Otherwise, some tests may fail.  Ignore the error in the
+       // interim.
+@@ -886,8 +886,8 @@ Status DBImpl::AtomicFlushMemTablesToOutputFiles(
+       NotifyOnFlushCompleted(cfds[i], all_mutable_cf_options[i],
+                              jobs[i]->GetCommittedFlushJobsInfo());
+       if (sfm) {
+-        std::string file_path = MakeTableFileName(
+-            cfds[i]->ioptions()->cf_paths[0].path, file_meta[i].fd.GetNumber());
++        std::string file_path = TableFileName(
++            cfds[i]->ioptions()->cf_paths, file_meta[i].fd.GetNumber(), file_meta[i].fd.GetPathId());
+         // TODO (PR7798).  We should only add the file to the FileManager if it
+         // exists. Otherwise, some tests may fail.  Ignore the error in the
+         // interim.
+diff --git a/db/flush_job.cc b/db/flush_job.cc
+index 393d710..11e21cd 100644
+--- a/db/flush_job.cc
++++ b/db/flush_job.cc
+@@ -47,6 +47,8 @@
+ #include "util/mutexlock.h"
+ #include "util/stop_watch.h"
+ 
++#include<iostream> // czn
++
+ namespace ROCKSDB_NAMESPACE {
+ 
+ const char* GetFlushReasonString(FlushReason flush_reason) {
+@@ -209,9 +211,17 @@ void FlushJob::PickMemTable() {
+   edit_->SetColumnFamily(cfd_->GetID());
+ 
+   // path 0 for level 0 file.
+-  meta_.fd = FileDescriptor(versions_->NewFileNumber(), 0, 0);
++  int meta_file_path = cfd_->gen_next_l0_output_file_id();
++
++  printf("%d \n", meta_file_path);
++
++  meta_.fd = FileDescriptor(versions_->NewFileNumber(), meta_file_path, 0);
+   meta_.epoch_number = cfd_->NewEpochNumber();
+ 
++  printf("%ld %d\n", meta_.fd.GetNumber(), meta_.fd.GetPathId());
++
++  // std::cout<<cfd_->cf_options->
++
+   base_ = cfd_->current();
+   base_->Ref();  // it is likely that we do not need this reference
+ }
+@@ -1011,10 +1021,11 @@ Status FlushJob::WriteLevel0Table() {
+     }
+     ROCKS_LOG_BUFFER(log_buffer_,
+                      "[%s] [JOB %d] Level-0 flush table #%" PRIu64 ": %" PRIu64
+-                     " bytes %s"
++                     " bytes to cf_paths[%d] %s"
+                      "%s",
+                      cfd_->GetName().c_str(), job_context_->job_id,
+                      meta_.fd.GetNumber(), meta_.fd.GetFileSize(),
++                     meta_.fd.GetPathId(),
+                      s.ToString().c_str(),
+                      meta_.marked_for_compaction ? " (needs compaction)" : "");
+ 
+@@ -1109,7 +1120,7 @@ std::unique_ptr<FlushJobInfo> FlushJob::GetFlushJobInfo() const {
+ 
+   const uint64_t file_number = meta_.fd.GetNumber();
+   info->file_path =
+-      MakeTableFileName(cfd_->ioptions()->cf_paths[0].path, file_number);
++      TableFileName(cfd_->ioptions()->cf_paths, file_number, meta_.fd.GetPathId());
+   info->file_number = file_number;
+   info->oldest_blob_file_number = meta_.oldest_blob_file_number;
+   info->thread_id = db_options_.env->GetThreadID();
+diff --git a/tools/db_bench_tool.cc b/tools/db_bench_tool.cc
+index 9aab37c..7dc6cf7 100644
+--- a/tools/db_bench_tool.cc
++++ b/tools/db_bench_tool.cc
+@@ -3412,6 +3412,13 @@ class Benchmark {
+     }
+     Open(&open_options_);
+     PrintHeader(open_options_);
++    uint64_t target_size = 256 * 1024 * 1024 * 1024;
++    open_options_.cf_paths = {
++      DbPath("/mnt/smartssd/czn/raid_test0",target_size),
++      DbPath("/mnt/smartssd1/czn/raid_test1",target_size),
++      DbPath("/mnt/smartssd2/czn/raid_test2",target_size),
++      DbPath("/mnt/smartssd3/czn/raid_test3",target_size),
++    };
+     std::stringstream benchmark_stream(FLAGS_benchmarks);
+     std::string name;
+     std::unique_ptr<ExpiredTimeFilter> filter;
