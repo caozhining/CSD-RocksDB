@@ -920,6 +920,11 @@ ImmutableCFOptions::ImmutableCFOptions() : ImmutableCFOptions(Options()) {}
 ImmutableCFOptions::ImmutableCFOptions(const ColumnFamilyOptions& cf_options)
     : compaction_style(cf_options.compaction_style),
       compaction_pri(cf_options.compaction_pri),
+      compaction_device(cf_options.compaction_device),
+      CompactionKernelPath(cf_options.CompactionKernelPath),
+      Compaction_accelerator_id(cf_options.Compaction_accelerator_id),
+      compaction_csd_gen_sst_file_size_policy(cf_options.compaction_csd_gen_sst_file_size_policy),
+      compaction_on_csd_threads(cf_options.compaction_on_csd_threads),
       user_comparator(cf_options.comparator),
       internal_comparator(InternalKeyComparator(cf_options.comparator)),
       merge_operator(cf_options.merge_operator),

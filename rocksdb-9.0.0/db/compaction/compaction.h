@@ -8,6 +8,7 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #pragma once
+#include<iostream>
 #include "db/version_set.h"
 #include "memory/arena.h"
 #include "options/cf_options.h"
@@ -345,6 +346,15 @@ class Compaction {
     output_table_properties_[file_name] = tp;
   }
 
+  //Set compaction calcuation device
+  void SetCompactionOnCSD(){
+    compaction_on_CSD_ = true;
+  }
+  //Get compaction calculation device
+  bool GetCompactionOnCSD() const {
+    return compaction_on_CSD_;
+  }
+
   const TablePropertiesCollection& GetOutputTableProperties() const {
     return output_table_properties_;
   }
@@ -547,6 +557,9 @@ class Compaction {
 
   // Reason for compaction
   CompactionReason compaction_reason_;
+
+  //Indentify this compaction calculation device
+  bool compaction_on_CSD_=0;
 
   // Notify on compaction completion only if listener was notified on compaction
   // begin.

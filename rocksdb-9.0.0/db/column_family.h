@@ -29,6 +29,13 @@
 #include "util/hash_containers.h"
 #include "util/thread_local.h"
 
+#define CL_HPP_CL_1_2_DEFAULT_BUILD
+#define CL_HPP_TARGET_OPENCL_VERSION 120
+#define CL_HPP_MINIMUM_OPENCL_VERSION 120
+#define CL_HPP_ENABLE_PROGRAM_CONSTRUCTION_FROM_ARRAY_COMPATIBILITY 1
+#include <CL/cl2.hpp>
+#include <CL/cl_ext_xilinx.h>
+
 namespace ROCKSDB_NAMESPACE {
 
 class Version;
@@ -547,6 +554,16 @@ class ColumnFamilyData {
   // Recover the next epoch number of this CF and epoch number
   // of its files (if missing)
   void RecoverEpochNumbers();
+
+  cl::Device Compaction_accelerator_device;
+  cl::Context Compaction_csd_context;
+  cl::CommandQueue Compaction_csd_queue;
+  cl::Kernel Compaction_accelerator_kernel;
+  cl::Buffer input_sst_buffer[4];
+  cl::Buffer input_metadata_buffer;
+  cl::Buffer output_datablock_buffer;
+  cl::Buffer output_indexblock_buffer;
+  cl::Buffer output_metadata_buffer;
 
  private:
   friend class ColumnFamilySet;

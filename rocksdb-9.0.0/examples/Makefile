@@ -16,6 +16,9 @@ CFLAGS += -Wstrict-prototypes
 
 .PHONY: clean librocksdb
 
+CXXFLAGS += -I/opt/xilinx/xrt/include -I/tools/Xilinx/Vivado/2022.2/include -I/tools/Xilinx/Vitis_HLS/2022.2/include -Wall -O0 -g -std=c++1y
+LDFLAGS += -L/opt/xilinx/xrt/lib -pthread -lOpenCL
+
 all: simple_example column_families_example compact_files_example c_simple_example optimistic_transaction_example transaction_example compaction_filter_example options_file_example rocksdb_backup_restore_example
 
 simple_example: librocksdb simple_example.cc

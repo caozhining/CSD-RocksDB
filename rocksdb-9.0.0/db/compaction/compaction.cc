@@ -856,8 +856,16 @@ bool Compaction::IsOutputLevelEmpty() const {
 }
 
 bool Compaction::ShouldFormSubcompactions() const {
+
+  //std::cout<<"here! shouldformsubcompactions\n";
+
   if (cfd_ == nullptr) {
     return false;
+  }
+
+  if(cfd_->ioptions()->compaction_device == kCompactionOnCSD && GetCompactionOnCSD()){
+    return false;
+    // return true; // 123456test subcompaction
   }
 
   // Round-Robin pri under leveled compaction allows subcompactions by default

@@ -2644,6 +2644,10 @@ class DBImpl : public DB {
 
   int unscheduled_compactions_;
 
+  int Compaction_on_CSD_num_=0;
+
+  int compaction_csd_time=0;
+
   // count how many background compactions are running or have been scheduled in
   // the BOTTOM pool
   int bg_bottom_compaction_scheduled_;

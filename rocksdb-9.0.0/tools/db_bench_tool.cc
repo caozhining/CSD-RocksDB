@@ -525,6 +525,10 @@ DEFINE_int32(compaction_pri,
              (int32_t)ROCKSDB_NAMESPACE::Options().compaction_pri,
              "priority of files to compaction: by size or by data age");
 
+DEFINE_int32(compaction_device,
+             (int32_t)ROCKSDB_NAMESPACE::Options().compaction_device,
+             "Compaction on csd");
+
 DEFINE_int32(universal_size_ratio, 0,
              "Percentage flexibility while comparing file size "
              "(for universal compaction only).");
@@ -3410,8 +3414,17 @@ class Benchmark {
     if (!SanityCheck()) {
       ErrorExit();
     }
+
+    
+  std::cout<<"======================================\n";
+  std::cout<<"======================================\n";
+  std::cout<<"================  run  ===============\n";
+  std::cout<<"======================================\n";
+
     Open(&open_options_);
     PrintHeader(open_options_);
+    // open_options_.max_open_files=-1;  //123456test option maxfd
+    // open_options_.max_subcompactions=16; //123456test option subcompaction
     std::stringstream benchmark_stream(FLAGS_benchmarks);
     std::string name;
     std::unique_ptr<ExpiredTimeFilter> filter;
@@ -3516,6 +3529,21 @@ class Benchmark {
         method = &Benchmark::WriteSeq;
       } else if (name == "fillrandom") {
         fresh_db = true;
+        open_options_.compaction_device =kCompactionOnCSD;
+        // open_options_.CompactionKernelPath="/home/zhining/rocksdbCSD/compaction_dataflow_DEBUG/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_DEBUG_11202.xclbin";
+        // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v1024_20250111.xclbin";
+        open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v1024_20250317.xclbin";
+        open_options_.Compaction_accelerator_id=0;
+        open_options_.compaction_csd_gen_sst_file_size_policy=KCompactionCSDSSTlayer;
+        // open_options_.compaction_csd_gen_sst_file_size_policy=kCompactionCSDSSTavg;
+        // open_options_.compaction_csd_gen_sst_file_size_policy=kCompactionCSDSSTwtosmall;
+        
+  std::cout<<"======================================\n";
+  std::cout<<"======================================\n";
+  std::cout<<"================write=================\n";
+  std::cout<<"======================================\n";
+
+
         method = &Benchmark::WriteRandom;
       } else if (name == "filluniquerandom" ||
                  name == "fillanddeleteuniquerandom") {
@@ -4225,6 +4253,12 @@ class Benchmark {
     options.max_background_flushes = FLAGS_max_background_flushes;
     options.compaction_style = FLAGS_compaction_style_e;
     options.compaction_pri = FLAGS_compaction_pri_e;
+    // options.compaction_device =kCompactionOnCSD;
+    // options.CompactionKernelPath="/home/zhining/rocksdbCSD/compaction_dataflow_DEBUG/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_DEBUG_11202.xclbin";
+    // options.Compaction_accelerator_id=3;
+    options.paranoid_file_checks = false;
+
+    // printf("--SET CSD--\n");
     options.allow_mmap_reads = FLAGS_mmap_read;
     options.allow_mmap_writes = FLAGS_mmap_write;
     options.use_direct_reads = FLAGS_use_direct_reads;
@@ -5209,9 +5243,11 @@ class Benchmark {
       if (duration.GetStage() != stage) {
         stage = duration.GetStage();
         if (db_.db != nullptr) {
+          std::cout<<"---------- open 1-----------\n";
           db_.CreateNewCf(open_options_, stage);
         } else {
           for (auto& db : multi_dbs_) {
+            std::cout<<"---------- open n-----------\n";
             db.CreateNewCf(open_options_, stage);
           }
         }
@@ -8537,6 +8573,7 @@ class Benchmark {
 };
 
 int db_bench_tool(int argc, char** argv) {
+
   ROCKSDB_NAMESPACE::port::InstallStackTraceHandler();
   ConfigOptions config_options;
   static bool initialized = false;

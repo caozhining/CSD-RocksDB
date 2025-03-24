@@ -3496,6 +3496,8 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
                                     LogBuffer* log_buffer,
                                     PrepickedCompaction* prepicked_compaction,
                                     Env::Priority thread_pri) {
+  //printf("jiasjdijasodjasoijd\n");
+  // printf("Time %d\n", compaction_csd_time);
   ManualCompactionState* manual_compaction =
       prepicked_compaction == nullptr
           ? nullptr
@@ -3640,6 +3642,7 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
       // compaction is not necessary. Need to make sure mutex is held
       // until we make a copy in the following code
       TEST_SYNC_POINT("DBImpl::BackgroundCompaction():BeforePickCompaction");
+      // mutable_db_options_.max_subcompactions=2;  // 123456test sub compaction
       c.reset(cfd->PickCompaction(*mutable_cf_options, mutable_db_options_,
                                   log_buffer));
       TEST_SYNC_POINT("DBImpl::BackgroundCompaction():AfterPickCompaction");
@@ -3864,6 +3867,30 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
                        &earliest_write_conflict_snapshot, &snapshot_checker);
     assert(is_snapshot_supported_ || snapshots_.empty());
 
+    // printf("now check whether on CSD\n\n\n");
+    compaction_csd_time++;
+    // printf("Compaction on CSD - Times %d\n", compaction_csd_time);
+
+
+    if(c->column_family_data()->ioptions()->compaction_device==kCompactionOnCSD&&!Compaction_on_CSD_num_)
+    {
+      const std::vector<CompactionInputFiles>& compaction_input_file =
+          *(c->inputs());
+      int file_count=0;
+      for (const auto& files_per_level : compaction_input_file) {  
+        file_count+=files_per_level.size();
+      }
+      if(file_count<=4 && (c.get()->output_level())>2)
+      {
+        Compaction_on_CSD_num_++;
+        c.get()->SetCompactionOnCSD();
+        // printf("123456test1 on csd, file count:%d\n", file_count); //123456test
+      }
+      else
+      {
+        // printf("123456test2 not on csd, file count:%d\n", file_count); //123456test
+      }
+    }
     CompactionJob compaction_job(
         job_context->job_id, c.get(), immutable_db_options_,
         mutable_db_options_, file_options_for_compaction_, versions_.get(),
@@ -3902,6 +3929,11 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
     *made_progress = true;
     TEST_SYNC_POINT_CALLBACK("DBImpl::BackgroundCompaction:AfterCompaction",
                              c->column_family_data());
+    if(c.get()->GetCompactionOnCSD()){
+      Compaction_on_CSD_num_=0;
+    }else{
+      
+    }
   }
 
   if (status.ok() && !io_s.ok()) {
@@ -3947,6 +3979,7 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
   } else if (status.IsColumnFamilyDropped() || status.IsShutdownInProgress()) {
     // Ignore compaction errors found during shutting down
   } else {
+    std::cout<<"Compaction Warning!!!\n";
     ROCKS_LOG_WARN(immutable_db_options_.info_log, "Compaction error: %s",
                    status.ToString().c_str());
     if (!io_s.ok()) {
@@ -4137,6 +4170,8 @@ void DBImpl::BuildCompactionJobInfo(
     const ColumnFamilyData* cfd, Compaction* c, const Status& st,
     const CompactionJobStats& compaction_job_stats, const int job_id,
     CompactionJobInfo* compaction_job_info) const {
+
+  // std::cout<<"Build Compaction Job Info\n";
   assert(compaction_job_info != nullptr);
   compaction_job_info->cf_id = cfd->GetID();
   compaction_job_info->cf_name = cfd->GetName();

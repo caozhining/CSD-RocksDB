@@ -29,6 +29,16 @@ struct ImmutableCFOptions {
 
   CompactionPri compaction_pri;
 
+  CompactionDevice compaction_device;
+  
+  std::string CompactionKernelPath; 
+
+  long unsigned int Compaction_accelerator_id=0;
+
+  CompactionCSDGenSSTfileSizePolicy compaction_csd_gen_sst_file_size_policy = kCompactionCSDSSTavg;
+
+  uint64_t compaction_on_csd_threads=1;
+
   const Comparator* user_comparator;
   InternalKeyComparator internal_comparator;  // Only in Immutable
 

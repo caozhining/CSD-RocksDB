@@ -53,6 +53,9 @@ Status VerifyBlockChecksum(const Footer& footer, const char* data,
       stored = crc32c::Unmask(stored);
       computed = crc32c::Unmask(computed);
     }
+
+    // assert(0);
+
     return Status::Corruption(
         "block checksum mismatch: stored" +
         std::string(modifier ? "(context removed)" : "") + " = " +
