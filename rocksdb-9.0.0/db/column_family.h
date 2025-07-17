@@ -29,6 +29,13 @@
 #include "util/hash_containers.h"
 #include "util/thread_local.h"
 
+#define CL_HPP_CL_1_2_DEFAULT_BUILD
+#define CL_HPP_TARGET_OPENCL_VERSION 120
+#define CL_HPP_MINIMUM_OPENCL_VERSION 120
+#define CL_HPP_ENABLE_PROGRAM_CONSTRUCTION_FROM_ARRAY_COMPATIBILITY 1
+#include <CL/cl2.hpp>
+#include <CL/cl_ext_xilinx.h>
+
 namespace ROCKSDB_NAMESPACE {
 
 class Version;
@@ -548,6 +555,25 @@ class ColumnFamilyData {
   // of its files (if missing)
   void RecoverEpochNumbers();
 
+
+  cl::Device Compaction_accelerator_device[4];
+  cl::Context Compaction_csd_context[4];
+  cl::CommandQueue Compaction_csd_queue[4];
+  cl::Kernel Compaction_accelerator_kernel[4];
+  cl::Buffer input_sst_buffer[4][4];
+  cl::Buffer input_metadata_buffer[4];
+  cl::Buffer output_datablock_buffer[4];
+  cl::Buffer output_indexblock_buffer[4];
+  cl::Buffer output_metadata_buffer[4];
+
+  void set_cf_path_sum(int cf_path_sum){ cf_path_sum_ = cf_path_sum; }
+
+  int gen_next_l0_output_file_id(){ 
+    l0_output_file_id = (l0_output_file_id + 1) % cf_path_sum_; 
+    return l0_output_file_id;
+  } 
+
+
  private:
   friend class ColumnFamilySet;
   ColumnFamilyData(uint32_t id, const std::string& name,
@@ -562,6 +588,9 @@ class ColumnFamilyData {
                    const std::string& db_id, const std::string& db_session_id);
 
   std::vector<std::string> GetDbPaths() const;
+
+  int l0_output_file_id = 0;
+  int cf_path_sum_ = 1;
 
   uint32_t id_;
   const std::string name_;

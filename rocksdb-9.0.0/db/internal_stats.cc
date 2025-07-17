@@ -47,6 +47,7 @@ const std::map<LevelStatType, LevelStat> InternalStats::compaction_level_stats =
         {LevelStatType::WRITE_GB, LevelStat{"WriteGB", "Write(GB)"}},
         {LevelStatType::W_NEW_GB, LevelStat{"WnewGB", "Wnew(GB)"}},
         {LevelStatType::MOVED_GB, LevelStat{"MovedGB", "Moved(GB)"}},
+        {LevelStatType::W_CSD_GB, LevelStat{"CSDGB", "CSD(GB)"}},
         {LevelStatType::WRITE_AMP, LevelStat{"WriteAmp", "W-Amp"}},
         {LevelStatType::READ_MBPS, LevelStat{"ReadMBps", "Rd(MB/s)"}},
         {LevelStatType::WRITE_MBPS, LevelStat{"WriteMBps", "Wr(MB/s)"}},
@@ -99,7 +100,7 @@ void PrintLevelStatsHeader(char* buf, size_t len, const std::string& cf_name,
   };
   int line_size = snprintf(
       buf + written_size, len - written_size,
-      "%s    %s   %s     %s %s  %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s "
+      "%s    %s   %s     %s %s  %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s "
       "%s\n",
       // Note that we skip COMPACTED_FILES and merge it with Files column
       group_by.c_str(), hdr(LevelStatType::NUM_FILES),
@@ -107,6 +108,7 @@ void PrintLevelStatsHeader(char* buf, size_t len, const std::string& cf_name,
       hdr(LevelStatType::READ_GB), hdr(LevelStatType::RN_GB),
       hdr(LevelStatType::RNP1_GB), hdr(LevelStatType::WRITE_GB),
       hdr(LevelStatType::W_NEW_GB), hdr(LevelStatType::MOVED_GB),
+      hdr(LevelStatType::W_CSD_GB),
       hdr(LevelStatType::WRITE_AMP), hdr(LevelStatType::READ_MBPS),
       hdr(LevelStatType::WRITE_MBPS), hdr(LevelStatType::COMP_SEC),
       hdr(LevelStatType::COMP_CPU_SEC), hdr(LevelStatType::COMP_COUNT),
@@ -141,6 +143,7 @@ void PrepareLevelStats(std::map<LevelStatType, double>* level_stats,
   (*level_stats)[LevelStatType::RNP1_GB] = stats.bytes_read_output_level / kGB;
   (*level_stats)[LevelStatType::WRITE_GB] = stats.bytes_written / kGB;
   (*level_stats)[LevelStatType::W_NEW_GB] = bytes_new / kGB;
+  (*level_stats)[LevelStatType::W_CSD_GB] = stats.bytes_written_csd / kGB;
   (*level_stats)[LevelStatType::MOVED_GB] = stats.bytes_moved / kGB;
   (*level_stats)[LevelStatType::WRITE_AMP] = w_amp;
   (*level_stats)[LevelStatType::READ_MBPS] = bytes_read / kMB / elapsed;
@@ -172,6 +175,7 @@ void PrintLevelStats(char* buf, size_t len, const std::string& name,
       "%9.1f "    /*  Write(GB) */
       "%8.1f "    /*  Wnew(GB) */
       "%9.1f "    /*  Moved(GB) */
+      "%7.1f "    /*  CSD(GB) */
       "%5.1f "    /*  W-Amp */
       "%8.1f "    /*  Rd(MB/s) */
       "%8.1f "    /*  Wr(MB/s) */
@@ -195,6 +199,7 @@ void PrintLevelStats(char* buf, size_t len, const std::string& name,
       stat_value.at(LevelStatType::WRITE_GB),
       stat_value.at(LevelStatType::W_NEW_GB),
       stat_value.at(LevelStatType::MOVED_GB),
+      stat_value.at(LevelStatType::W_CSD_GB),
       stat_value.at(LevelStatType::WRITE_AMP),
       stat_value.at(LevelStatType::READ_MBPS),
       stat_value.at(LevelStatType::WRITE_MBPS),
@@ -1796,7 +1801,9 @@ void InternalStats::DumpCFMapStats(
           (input_bytes == 0)
               ? 0.0
               : static_cast<double>(comp_stats_[level].bytes_written +
-                                    comp_stats_[level].bytes_written_blob) /
+                                    comp_stats_[level].bytes_written_blob -
+                                    comp_stats_[level].bytes_written_csd 
+                                    ) /
                     input_bytes;
       std::map<LevelStatType, double> level_stats;
       PrepareLevelStats(&level_stats, files, files_being_compacted[level],
@@ -1809,7 +1816,9 @@ void InternalStats::DumpCFMapStats(
   double w_amp = (0 == curr_ingest)
                      ? 0.0
                      : (compaction_stats_sum->bytes_written +
-                        compaction_stats_sum->bytes_written_blob) /
+                        compaction_stats_sum->bytes_written_blob - 
+                        compaction_stats_sum->bytes_written_csd
+                        ) /
                            static_cast<double>(curr_ingest);
   // Stats summary across levels
   std::map<LevelStatType, double> sum_stats;

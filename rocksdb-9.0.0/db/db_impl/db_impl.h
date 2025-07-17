@@ -2644,6 +2644,26 @@ class DBImpl : public DB {
 
   int unscheduled_compactions_;
 
+  std::mutex CSD_lock;
+
+  std::condition_variable CSD_cv;
+
+  std::atomic<int> Compaction_on_CSD_num_=0;
+
+  std::atomic<bool> CSD_Compaction_Status[4] = {false, false, false, false};
+
+  double Level_Compaction_speed_count[10][10] = {0};
+
+  std::atomic<int> level_speed_pos[10] = {0};
+
+  bool offload_Compaction_Level[10] = {false, false, false, false, false, false, false, false, false, false};
+
+  std::atomic<int> score_speed_pos = 0;
+  
+  
+
+  int compaction_csd_time=0;
+
   // count how many background compactions are running or have been scheduled in
   // the BOTTOM pool
   int bg_bottom_compaction_scheduled_;

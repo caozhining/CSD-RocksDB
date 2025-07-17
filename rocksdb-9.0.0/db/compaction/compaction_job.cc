@@ -601,6 +601,7 @@ void CompactionJob::GenSubcompactionBoundaries() {
   uint64_t next_threshold = target_range_size;
   uint64_t cumulative_size = 0;
   uint64_t num_actual_subcompactions = 1U;
+
   for (TableReader::Anchor& anchor : all_anchors) {
     cumulative_size += anchor.range_size;
     if (cumulative_size > next_threshold) {
@@ -620,7 +621,11 @@ void CompactionJob::GenSubcompactionBoundaries() {
                extra_num_subcompaction_threads_reserved_));
 }
 
+#include <sstream>  // 123456test
+#include <chrono>  // 123456test
 Status CompactionJob::Run() {
+  std::stringstream ss;  // 123456test
+  std::chrono::high_resolution_clock::time_point jobstart = std::chrono::high_resolution_clock::now();  // 123456test
   AutoThreadOperationStageUpdater stage_updater(
       ThreadStatus::STAGE_COMPACTION_RUN);
   TEST_SYNC_POINT("CompactionJob::Run():Start");
@@ -641,7 +646,21 @@ Status CompactionJob::Run() {
 
   // Always schedule the first subcompaction (whether or not there are also
   // others) in the current thread to be efficient with resources
+  if (compact_->sub_compact_states[0].compaction->GetCompactionOnCSD()) {  // 123456test
+    ss << "** csd compaction time: ";  // 123456test
+  } else {  // 123456test
+    ss << "** cpu compaction time: ";  // 123456test
+  }  // 123456test
+  std::chrono::high_resolution_clock::time_point compactionstart = std::chrono::high_resolution_clock::now();  // 123456test
   ProcessKeyValueCompaction(&compact_->sub_compact_states[0]);
+  std::chrono::high_resolution_clock::time_point compactionend = std::chrono::high_resolution_clock::now();  // 123456test
+  cl_ulong compactiontime = std::chrono::duration_cast<std::chrono::nanoseconds>(compactionend - compactionstart).count();  // 123456test
+  ss << compactiontime / 1000000.0 << " ms\n";   // 123456test
+  if (compact_->sub_compact_states[0].compaction->GetCompactionOnCSD()) {  // 123456test
+    ss << "** csd run time: ";  // 123456test
+  } else {  // 123456test
+    ss << "** cpu run time: ";  // 123456test
+  }  // 123456test
 
   // Wait for all other threads (if there are any) to finish execution
   for (auto& thread : thread_pool) {
@@ -704,6 +723,7 @@ Status CompactionJob::Run() {
   if (status.ok()) {
     status = io_s;
   }
+
   if (status.ok()) {
     thread_pool.clear();
     std::vector<const CompactionOutputs::Output*> files_output;
@@ -716,6 +736,7 @@ Status CompactionJob::Run() {
     auto& prefix_extractor =
         compact_->compaction->mutable_cf_options()->prefix_extractor;
     std::atomic<size_t> next_file_idx(0);
+    std::chrono::high_resolution_clock::time_point verify_start_time = std::chrono::high_resolution_clock::now();  // 123456test
     auto verify_table = [&](Status& output_status) {
       while (true) {
         size_t file_idx = next_file_idx.fetch_add(1);
@@ -784,6 +805,9 @@ Status CompactionJob::Run() {
     for (auto& thread : thread_pool) {
       thread.join();
     }
+    std::chrono::high_resolution_clock::time_point verify_end_time = std::chrono::high_resolution_clock::now();  // 123456test
+    cl_ulong verify_time_diff = std::chrono::duration_cast<std::chrono::nanoseconds>(verify_end_time - verify_start_time).count();  // 123456test
+    printf("verify time: %.2f ms\n", verify_time_diff / 1000000.0);  // 123456test
 
     for (const auto& state : compact_->sub_compact_states) {
       if (!state.status.ok()) {
@@ -851,7 +875,32 @@ Status CompactionJob::Run() {
   TEST_SYNC_POINT("CompactionJob::Run():End");
   compact_->status = status;
   TEST_SYNC_POINT_CALLBACK("CompactionJob::Run():EndStatusSet", &status);
+  std::chrono::high_resolution_clock::time_point jobend = std::chrono::high_resolution_clock::now();  // 123456test
+  cl_ulong jobtime = std::chrono::duration_cast<std::chrono::nanoseconds>(jobend - jobstart).count();  // 123456test
+  ss << jobtime / 1000000.0 << " ms\n";   // 123456test
+  std::cout << ss.str().c_str();  // 123456test
+
   return status;
+}
+
+double CompactionJob::GetCompactionSpeed(){
+  double bytes_read_per_sec = 0;
+  double bytes_written_per_sec = 0;
+  const auto& stats = compaction_stats_.stats;
+  const uint64_t bytes_read_non_output_and_blob =
+    stats.bytes_read_non_output_levels + stats.bytes_read_blob;
+  const uint64_t bytes_read_all =
+    stats.bytes_read_output_level + bytes_read_non_output_and_blob;
+  const uint64_t bytes_written_all =
+      stats.bytes_written + stats.bytes_written_blob;
+
+  if (stats.micros > 0) {
+    bytes_read_per_sec = bytes_read_all / static_cast<double>(stats.micros);
+    bytes_written_per_sec =
+        bytes_written_all / static_cast<double>(stats.micros);
+  }
+
+  return (bytes_read_per_sec > bytes_written_per_sec) ? bytes_read_per_sec : bytes_written_per_sec;
 }
 
 Status CompactionJob::Install(const MutableCFOptions& mutable_cf_options,
@@ -1077,6 +1126,24 @@ void CompactionJob::NotifyOnSubcompactionCompleted(
 void CompactionJob::ProcessKeyValueCompaction(SubcompactionState* sub_compact) {
   assert(sub_compact);
   assert(sub_compact->compaction);
+  if(sub_compact->compaction->GetCompactionOnCSD()){
+    std::chrono::high_resolution_clock::time_point compactionstart = std::chrono::high_resolution_clock::now();  // 123456test
+    auto time = std::chrono::duration_cast<std::chrono::milliseconds>(compactionstart.time_since_epoch());
+    std::cout << time.count() << " ms at outer start\n";
+    CompactionServiceJobStatus comp_status =
+        ProcessKeyValueCompactionOnCSD(sub_compact);
+    std::chrono::high_resolution_clock::time_point compactionend = std::chrono::high_resolution_clock::now();  // 123456test
+    auto time2 = std::chrono::duration_cast<std::chrono::milliseconds>(compactionend.time_since_epoch());
+    std::cout << time2.count() << " ms at outer end\n";
+    cl_ulong compactiontime = std::chrono::duration_cast<std::chrono::nanoseconds>(compactionend - compactionstart).count();  // 123456test
+    // printf("compaction real time: %.2f ms\n", compactiontime / 1000000.0);   // 123456test
+    if (comp_status == CompactionServiceJobStatus::kSuccess ||
+        comp_status == CompactionServiceJobStatus::kFailure) {
+      return;
+    }
+    // fallback to local compaction
+    assert(comp_status == CompactionServiceJobStatus::kUseLocal);
+  }
   if (db_options_.compaction_service) {
     CompactionServiceJobStatus comp_status =
         ProcessKeyValueCompactionWithCompactionService(sub_compact);
@@ -1087,7 +1154,6 @@ void CompactionJob::ProcessKeyValueCompaction(SubcompactionState* sub_compact) {
     // fallback to local compaction
     assert(comp_status == CompactionServiceJobStatus::kUseLocal);
   }
-
   uint64_t prev_cpu_micros = db_options_.clock->CPUMicros();
 
   ColumnFamilyData* cfd = sub_compact->compaction->column_family_data();
@@ -1162,6 +1228,7 @@ void CompactionJob::ProcessKeyValueCompaction(SubcompactionState* sub_compact) {
       file_options_for_read_, start, end));
   InternalIterator* input = raw_input.get();
 
+
   IterKey start_ikey;
   IterKey end_ikey;
   Slice start_slice;
@@ -1223,7 +1290,6 @@ void CompactionJob::ProcessKeyValueCompaction(SubcompactionState* sub_compact) {
         input, cfd->user_comparator(), trim_ts_);
     input = trim_history_iter.get();
   }
-
   input->SeekToFirst();
 
   AutoThreadOperationStageUpdater stage_updater(
@@ -1669,7 +1735,8 @@ Status CompactionJob::FinishCompactionOutputFile(
   uint64_t oldest_blob_file_number = kInvalidBlobFileNumber;
   Status status_for_listener = s;
   if (meta != nullptr) {
-    fname = GetTableFileName(meta->fd.GetNumber());
+    // fname = GetTableFileName(meta->fd.GetNumber());
+    fname = TableFileName(sub_compact->compaction->immutable_options()->cf_paths, meta->fd.GetNumber(), meta->fd.GetPathId());
     output_fd = meta->fd;
     oldest_blob_file_number = meta->oldest_blob_file_number;
   } else {
@@ -1833,7 +1900,11 @@ Status CompactionJob::OpenCompactionOutputFile(SubcompactionState* sub_compact,
 
   // no need to lock because VersionSet::next_file_number_ is atomic
   uint64_t file_number = versions_->NewFileNumber();
-  std::string fname = GetTableFileName(file_number);
+  uint32_t file_path_id = compact_->compaction->get_new_output_path_id();
+
+  // printf("Compaction output #%lld@L%d to path %d\n",file_number, compact_->compaction->output_level(), file_path_id);
+  std::string fname = TableFileName(compact_->compaction->immutable_options()->cf_paths, file_number, file_path_id);
+
   // Fire events.
   ColumnFamilyData* cfd = sub_compact->compaction->column_family_data();
   EventHelpers::NotifyTableFileCreationStarted(
@@ -1917,7 +1988,8 @@ Status CompactionJob::OpenCompactionOutputFile(SubcompactionState* sub_compact,
   {
     FileMetaData meta;
     meta.fd = FileDescriptor(file_number,
-                             sub_compact->compaction->output_path_id(), 0);
+                              // sub_compact->compaction->output_path_id(), 0);
+                             file_path_id, 0);
     meta.oldest_ancester_time = oldest_ancester_time;
     meta.file_creation_time = current_time;
     meta.epoch_number = epoch_number;
@@ -2023,6 +2095,7 @@ bool CompactionJob::UpdateCompactionStats(uint64_t* num_input_range_del) {
         std::string fn =
             TableFileName(compaction->immutable_options()->cf_paths,
                           file_number, file_meta->fd.GetPathId());
+      
         const auto& tp = input_table_properties.find(fn);
         if (tp != input_table_properties.end()) {
           file_input_entries = tp->second->num_entries;
@@ -2032,6 +2105,9 @@ bool CompactionJob::UpdateCompactionStats(uint64_t* num_input_range_del) {
         }
       }
       compaction_stats_.stats.num_input_records += file_input_entries;
+      // std::cout<<"file input entries: "<<file_input_entries<<"\n";
+      // std::cout<<"file name "<<TableFileName(compaction->immutable_options()->cf_paths,
+      //                     file_meta->fd.GetNumber(), file_meta->fd.GetPathId()) << '\n';
       if (num_input_range_del) {
         *num_input_range_del += file_num_range_del;
       }

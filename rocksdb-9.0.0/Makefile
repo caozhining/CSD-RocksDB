@@ -18,6 +18,10 @@ MACHINE ?= $(shell uname -m)
 ARFLAGS = ${EXTRA_ARFLAGS} rs
 STRIPFLAGS = -S -x
 
+
+CXXFLAGS += -I/opt/xilinx/xrt/include -I/tools/Xilinx/Vivado/2022.2/include -I/tools/Xilinx/Vitis_HLS/2022.2/include -Wall -O0 -g -std=c++1y
+LDFLAGS += -L/opt/xilinx/xrt/lib -pthread -lOpenCL
+
 # Transform parallel LOG output into something more readable.
 perl_command = perl -n \
   -e '@a=split("\t",$$_,-1); $$t=$$a[8];'				\
@@ -531,7 +535,7 @@ endif
 default: all
 
 WARNING_FLAGS = -W -Wextra -Wall -Wsign-compare -Wshadow \
-  -Wunused-parameter
+#   -Wunused-parameter
 
 ifeq (,$(filter amd64, $(MACHINE)))
 	C_WARNING_FLAGS = -Wstrict-prototypes
@@ -548,7 +552,7 @@ ifeq ($(PLATFORM), OS_OPENBSD)
 endif
 
 ifndef DISABLE_WARNING_AS_ERROR
-	WARNING_FLAGS += -Werror
+	# WARNING_FLAGS += -Werror
 endif
 
 
