@@ -702,6 +702,7 @@ Status BlockBasedTable::Open(
     s = GetSstInternalUniqueId(props->db_id, props->db_session_id,
                                props->orig_file_number, &actual_unique_id,
                                /*force*/ true);
+    
     assert(s.ok());  // because force=true
     if (expected_unique_id != actual_unique_id) {
       return Status::Corruption(
@@ -1163,6 +1164,7 @@ Status BlockBasedTable::PrefetchIndexAndFilterBlocks(
   const bool prefetch_index = prefetch_all || pin_index;
 
   std::unique_ptr<IndexReader> index_reader;
+
   s = new_table->CreateIndexReader(ro, prefetch_buffer, meta_iter, use_cache,
                                    prefetch_index, pin_index, lookup_context,
                                    &index_reader);

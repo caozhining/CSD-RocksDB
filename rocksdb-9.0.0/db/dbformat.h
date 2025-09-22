@@ -457,7 +457,7 @@ class InternalKey {
                 .ok());  // TODO
   }
 
-  void DecodeFrom(const Slice& s) { rep_.assign(s.data(), s.size()); }
+  void DecodeFrom(const Slice& s) { rep_.assign(s.data(), s.size());}
   Slice Encode() const {
     assert(!rep_.empty());
     return rep_;

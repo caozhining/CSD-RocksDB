@@ -152,6 +152,12 @@ LIB_SOURCES =                                                   \
   monitoring/thread_status_updater_debug.cc                     \
   monitoring/thread_status_util.cc                              \
   monitoring/thread_status_util_debug.cc                        \
+  ycsbcore/acknowledged_counter_generator.cc                    \
+  ycsbcore/basic_db.cc                                          \
+  ycsbcore/core_workload.cc                                    	\
+  ycsbcore/db_factory.cc                                        \
+  ycsbcore/measurements.cc                                      \
+  ycsbcore/ycsbc.cc                                             \
   options/cf_options.cc                                         \
   options/configurable.cc                                       \
   options/customizable.cc                                       \

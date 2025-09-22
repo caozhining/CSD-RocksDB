@@ -894,6 +894,7 @@ int IndexBlockIter::CompareBlockKey(uint32_t block_index, const Slice& target) {
                           &non_shared)
           : DecodeKey()(data_ + region_offset, data_ + restarts_, &shared,
                         &non_shared);
+  
   if (key_ptr == nullptr || (shared != 0)) {
     CorruptionError();
     return 1;  // Return target is smaller
@@ -1239,7 +1240,7 @@ void Block::InitializeMetaIndexBlockProtectionInfo(
 MetaBlockIter* Block::NewMetaIterator(bool block_contents_pinned) {
   MetaBlockIter* iter = new MetaBlockIter();
   if (size_ < 2 * sizeof(uint32_t)) {
-    iter->Invalidate(Status::Corruption("bad block contents"));
+    iter->Invalidate(Status::Corruption("Meta bad block contents"));
     return iter;
   } else if (num_restarts_ == 0) {
     // Empty block.
@@ -1264,7 +1265,7 @@ DataBlockIter* Block::NewDataIterator(const Comparator* raw_ucmp,
     ret_iter = new DataBlockIter;
   }
   if (size_ < 2 * sizeof(uint32_t)) {
-    ret_iter->Invalidate(Status::Corruption("bad block contents"));
+    ret_iter->Invalidate(Status::Corruption("Data bad block contents"));
     return ret_iter;
   }
   if (num_restarts_ == 0) {
@@ -1302,7 +1303,7 @@ IndexBlockIter* Block::NewIndexIterator(
     ret_iter = new IndexBlockIter;
   }
   if (size_ < 2 * sizeof(uint32_t)) {
-    ret_iter->Invalidate(Status::Corruption("bad block contents"));
+    ret_iter->Invalidate(Status::Corruption("Index bad block contents"));
     return ret_iter;
   }
   if (num_restarts_ == 0) {

@@ -1,0 +1,52 @@
+#ifndef __KRNL_HOST_H__
+#define __KRNL_HOST_H__
+
+#define CSD_MAX_INPUT_FILE_NUM 4
+#define CSD_MAX_OUTPUT_FILE_NUM 4
+
+// #define CSD_KEY_BITS 4
+#define CSD_KEY_BITS 5
+#define CSD_KEY_LENGTH (1 << CSD_KEY_BITS)  // 128 bytes
+#define CSD_KEY_WIDTH_BITS 4    // 用于计算key的宽度，方便offset和index的计算
+#define CSD_KEY_WIDTH_MASK ((1 << CSD_KEY_WIDTH_BITS) - 1)
+#define CSD_KEY_WIDTH (1 << CSD_KEY_WIDTH_BITS)     // 每个数组元素16字节宽，对齐128位
+#define CSD_KEY_BITWIDTH (CSD_KEY_WIDTH * 8)
+#define CSD_KEY_ARRAY_LENGTH ((CSD_KEY_LENGTH * 8) / CSD_KEY_BITWIDTH)
+#define CSD_KEY_LENGTH_BITWIDTH (CSD_KEY_BITS + 1)  // 8 bits
+
+
+// #define CSD_PPS_KERNEL_SINGEL_SIZE 32
+// #define CSD_PPS_KERNEL_SIZE (CSD_PPS_KERNEL_SINGEL_SIZE * CSD_MAX_OUTPUT_FILE_NUM)
+
+// #define CSD_PPS_DATABLOCK_NUM_OFF       0
+// #define CSD_PPS_ENTRIES_OFF             1
+// #define CSD_PPS_DATASIZE_OFF            2
+// #define CSD_PPS_RAWKEYSIZE_OFF          3
+// #define CSD_PPS_RAWVALUESIZE_OFF        4
+// #define CSD_PPS_INDEXBLOCK_OFFSET_OFF   5
+// #define CSD_PPS_SMALLESTKEY_OFF         6
+// #define CSD_PPS_SMALLESTKEY_LENGTH_OFF  8
+// #define CSD_PPS_LARGESTKEY_OFF          9
+// #define CSD_PPS_LARGESTKEY_LENGTH_OFF   11
+// #define CSD_PPS_MINSEQ_OFF              12
+// #define CSD_PPS_MAXSEQ_OFF              13
+// #define CSD_KEY_16
+
+#define CSD_PPS_KERNEL_SINGEL_SIZE 128
+#define CSD_PPS_KERNEL_SIZE (CSD_PPS_KERNEL_SINGEL_SIZE * CSD_MAX_OUTPUT_FILE_NUM)
+
+#define CSD_PPS_DATABLOCK_NUM_OFF       0
+#define CSD_PPS_ENTRIES_OFF             1
+#define CSD_PPS_DATASIZE_OFF            2
+#define CSD_PPS_RAWKEYSIZE_OFF          3
+#define CSD_PPS_RAWVALUESIZE_OFF        4
+#define CSD_PPS_INDEXBLOCK_OFFSET_OFF   5
+#define CSD_PPS_MINSEQ_OFF              6
+#define CSD_PPS_MAXSEQ_OFF              7
+#define CSD_PPS_SMALLESTKEY_LENGTH_OFF  8
+#define CSD_PPS_LARGESTKEY_LENGTH_OFF   9
+#define CSD_PPS_SMALLESTKEY_OFF         10
+#define CSD_PPS_LARGESTKEY_OFF          (CSD_PPS_SMALLESTKEY_OFF + (CSD_KEY_LENGTH / 8))  // KEY长度为128字节时，需要16个uint64_t
+//结束位置：10+16+16=42
+
+#endif

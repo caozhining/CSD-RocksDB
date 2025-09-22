@@ -41,6 +41,8 @@
 #include "util/cast_util.h"
 #include "util/compression.h"
 
+#include<iostream> //czn
+
 namespace ROCKSDB_NAMESPACE {
 
 ColumnFamilyHandleImpl::ColumnFamilyHandleImpl(
@@ -571,6 +573,13 @@ ColumnFamilyData::ColumnFamilyData(
   }
   Ref();
 
+  set_cf_path_sum(cf_options.cf_paths.size());
+
+  for(long unsigned int i=0;i<cf_options.cf_paths.size();i++)
+  {
+    std::cout<<cf_options.cf_paths[i].path<<"\n";
+  }
+
   // Convert user defined table properties collector factories to internal ones.
   GetInternalTblPropCollFactory(ioptions_, &internal_tbl_prop_coll_factories_);
 
@@ -619,6 +628,106 @@ ColumnFamilyData::ColumnFamilyData(
       initial_cf_options_.Dump(ioptions_.logger);
     } else {
       ROCKS_LOG_INFO(ioptions_.logger, "\t(skipping printing options)\n");
+    }
+
+    if(ioptions_.compaction_device == kCompactionOnCSD)
+    {
+      std::vector<cl::Device> devices;
+      cl_int err;
+      std::vector<cl::Platform> platforms;
+      bool found_device = false;
+
+      // traversing all Platforms To find Xilinx Platform and targeted
+      // Device in Xilinx Platform
+      cl::Platform::get(&platforms);
+      for (size_t i = 0; (i < platforms.size()) & (found_device == false); i++) {
+          cl::Platform platform = platforms[i];
+          std::string platformName = platform.getInfo<CL_PLATFORM_NAME>();
+          if (platformName == "Xilinx") {
+              devices.clear();
+              platform.getDevices(CL_DEVICE_TYPE_ACCELERATOR, &devices);
+              if (devices.size()) {
+                  found_device = true;
+                  break;
+              }
+          }
+      }
+      if (found_device == false) {
+          std::cout << "Error: Unable to find Target Device " << std::endl;
+      }
+
+
+      // std::cout << "INFO: Reading " << xclbinFilename << std::endl;
+      FILE* fp;
+      if ((fp = fopen(ioptions_.CompactionKernelPath.c_str(), "r")) == nullptr) {
+          printf("ERROR: %s xclbin not available please build\n", ioptions_.CompactionKernelPath.c_str());
+        
+      }
+      // Load xclbin
+      std::cout << "Loading: '" << ioptions_.CompactionKernelPath << "'\n";
+      std::ifstream bin_file(ioptions_.CompactionKernelPath, std::ifstream::binary);
+      bin_file.seekg(0, bin_file.end);
+      unsigned nb = bin_file.tellg();
+      bin_file.seekg(0, bin_file.beg);
+      char* buf = new char[nb];
+      bin_file.read(buf, nb);
+      bin_file.close();
+
+      // assert(ioptions_.Compaction_accelerator_id<=devices.size());
+
+      // Creating Program from Binary File
+      cl::Program::Binaries bins;
+      bins.push_back({buf, nb});
+
+      for (uint32_t i = 0 ; i < ioptions_.Compaction_accelerator_id.size(); i++){
+        Compaction_accelerator_device[i] = devices[ioptions_.Compaction_accelerator_id[i]];
+        Compaction_csd_context[i] = cl::Context(Compaction_accelerator_device[i], nullptr, nullptr, nullptr, &err);
+        Compaction_csd_queue[i] = cl::CommandQueue(Compaction_csd_context[i], Compaction_accelerator_device[i], CL_QUEUE_PROFILING_ENABLE, &err);
+        std::cout << "Trying to program device[" << ioptions_.Compaction_accelerator_id[i] << "]: " << Compaction_accelerator_device[i].getInfo<CL_DEVICE_NAME>() << std::endl;
+        cl::Program program(Compaction_csd_context[i], {Compaction_accelerator_device[i]}, bins, nullptr, &err);
+        if (err != CL_SUCCESS) {
+          std::cout << "Failed to program device[" << ioptions_.Compaction_accelerator_id[i] << "] with xclbin file!\n";
+        } else {
+            std::cout << "Device[" << ioptions_.Compaction_accelerator_id[i] << "]: program successful!\n";
+            Compaction_accelerator_kernel[i] = cl::Kernel(program, "krnl_vadd", &err);
+        }
+
+        // cl_mem_ext_ptr_t sst_input_p2p_ext;
+        // sst_input_p2p_ext = {XCL_MEM_EXT_P2P_BUFFER, nullptr, 0};
+        // input_sst_buffer[now_csd_thread*4 + 0]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE | CL_MEM_EXT_PTR_XILINX, sizeof(char) * (256 * 1024 *1024), &sst_input_p2p_ext);
+        // input_sst_buffer[now_csd_thread*4 + 1]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE | CL_MEM_EXT_PTR_XILINX, sizeof(char) * (256 * 1024 *1024), &sst_input_p2p_ext);
+        // input_sst_buffer[now_csd_thread*4 + 2]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE | CL_MEM_EXT_PTR_XILINX, sizeof(char) * (256 * 1024 *1024), &sst_input_p2p_ext);
+        // input_sst_buffer[now_csd_thread*4 + 3]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE | CL_MEM_EXT_PTR_XILINX, sizeof(char) * (256 * 1024 *1024), &sst_input_p2p_ext);
+
+        // input_metadata_buffer=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE, sizeof(int) * 15, NULL, &err);
+        input_metadata_buffer[i]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE, sizeof(uint64_t) * 64, NULL, &err);
+
+        cl_mem_ext_ptr_t sst_output_p2p_ext;
+        sst_output_p2p_ext = {XCL_MEM_EXT_P2P_BUFFER, nullptr, 0};
+        output_datablock_buffer[i]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE | CL_MEM_EXT_PTR_XILINX, sizeof(char) * (480 * 4 * 1024 *1024), &sst_output_p2p_ext);
+        cl_mem_ext_ptr_t sst_output_index_p2p_ext;
+        sst_output_index_p2p_ext = {XCL_MEM_EXT_P2P_BUFFER, nullptr, 0};
+        output_indexblock_buffer[i]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE | CL_MEM_EXT_PTR_XILINX, sizeof(char) * (8 * 1024 *1024), &sst_output_index_p2p_ext);
+        // output_indexblock_buffer[i]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE, sizeof(char) * (8 * 1024 *1024), NULL, &err);
+
+        // output_datablock_buffer=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE , sizeof(char) * (768 * 1024 *1024), NULL, &err);
+        // output_indexblock_buffer=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE, sizeof(char) * (8 * 1024 *1024), NULL, &err);
+
+        output_metadata_buffer[i]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_ONLY, sizeof(uint64_t) * (256 * 4), NULL, &err);
+
+        // Compaction_accelerator_kernel.setArg(0, input_sst_buffer[now_csd_thread*4 + 0]);
+        // Compaction_accelerator_kernel.setArg(1, input_sst_buffer[now_csd_thread*4 + 1]);
+        // Compaction_accelerator_kernel.setArg(2, input_sst_buffer[now_csd_thread*4 + 2]);
+        // Compaction_accelerator_kernel.setArg(3, input_sst_buffer[now_csd_thread*4 + 3]);
+        // Compaction_accelerator_kernel.setArg(4, input_metadata_buffer[now_csd_thread]);
+        // Compaction_accelerator_kernel.setArg(5, output_datablock_buffer[now_csd_thread]);
+        // Compaction_accelerator_kernel.setArg(6, output_indexblock_buffer[now_csd_thread]);
+        // Compaction_accelerator_kernel.setArg(7, output_metadata_buffer[now_csd_thread]);
+        Compaction_accelerator_kernel[i].setArg(4, input_metadata_buffer[i]);
+        Compaction_accelerator_kernel[i].setArg(5, output_datablock_buffer[i]);
+        Compaction_accelerator_kernel[i].setArg(6, output_indexblock_buffer[i]);
+        Compaction_accelerator_kernel[i].setArg(7, output_metadata_buffer[i]);
+      }
     }
   }
 
@@ -1715,6 +1824,8 @@ ColumnFamilyData* ColumnFamilySet::CreateColumnFamily(
     const std::string& name, uint32_t id, Version* dummy_versions,
     const ColumnFamilyOptions& options) {
   assert(column_families_.find(name) == column_families_.end());
+
+  printf("now new column family\n");
   ColumnFamilyData* new_cfd = new ColumnFamilyData(
       id, name, dummy_versions, table_cache_, write_buffer_manager_, options,
       *db_options_, &file_options_, this, block_cache_tracer_, io_tracer_,

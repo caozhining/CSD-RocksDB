@@ -422,8 +422,8 @@ Status DBImpl::FlushMemTableToOutputFile(
         immutable_db_options_.sst_file_manager.get());
     if (sfm) {
       // Notify sst_file_manager that a new file was added
-      std::string file_path = MakeTableFileName(
-          cfd->ioptions()->cf_paths[0].path, file_meta.fd.GetNumber());
+      std::string file_path = TableFileName(
+          cfd->ioptions()->cf_paths, file_meta.fd.GetNumber(), file_meta.fd.GetPathId());
       // TODO (PR7798).  We should only add the file to the FileManager if it
       // exists. Otherwise, some tests may fail.  Ignore the error in the
       // interim.
@@ -886,8 +886,8 @@ Status DBImpl::AtomicFlushMemTablesToOutputFiles(
       NotifyOnFlushCompleted(cfds[i], all_mutable_cf_options[i],
                              jobs[i]->GetCommittedFlushJobsInfo());
       if (sfm) {
-        std::string file_path = MakeTableFileName(
-            cfds[i]->ioptions()->cf_paths[0].path, file_meta[i].fd.GetNumber());
+        std::string file_path = TableFileName(
+            cfds[i]->ioptions()->cf_paths, file_meta[i].fd.GetNumber(), file_meta[i].fd.GetPathId());
         // TODO (PR7798).  We should only add the file to the FileManager if it
         // exists. Otherwise, some tests may fail.  Ignore the error in the
         // interim.
@@ -3496,6 +3496,8 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
                                     LogBuffer* log_buffer,
                                     PrepickedCompaction* prepicked_compaction,
                                     Env::Priority thread_pri) {
+  //printf("jiasjdijasodjasoijd\n");
+  // printf("Time %d\n", compaction_csd_time);
   ManualCompactionState* manual_compaction =
       prepicked_compaction == nullptr
           ? nullptr
@@ -3559,6 +3561,9 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
   TEST_SYNC_POINT("DBImpl::BackgroundCompaction:InProgress");
 
   std::unique_ptr<TaskLimiterToken> task_token;
+
+  uint32_t acc_num = 4;
+  bool is_CSD_thread = false;
 
   bool sfm_reserved_compact_space = false;
   if (is_manual) {
@@ -3640,6 +3645,7 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
       // compaction is not necessary. Need to make sure mutex is held
       // until we make a copy in the following code
       TEST_SYNC_POINT("DBImpl::BackgroundCompaction():BeforePickCompaction");
+
       c.reset(cfd->PickCompaction(*mutable_cf_options, mutable_db_options_,
                                   log_buffer));
       TEST_SYNC_POINT("DBImpl::BackgroundCompaction():AfterPickCompaction");
@@ -3864,6 +3870,55 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
                        &earliest_write_conflict_snapshot, &snapshot_checker);
     assert(is_snapshot_supported_ || snapshots_.empty());
 
+    // printf("now check whether on CSD\n\n\n");
+    compaction_csd_time++;
+    // printf("Compaction on CSD - Times %d\n", compaction_csd_time);
+
+
+    if(c->column_family_data()->ioptions()->compaction_device==kCompactionOnCSD)
+    {
+      if (
+        c->column_family_data()->ioptions()->compaction_csd_policy==kCompactionCSDArray || // for test
+        c->column_family_data()->ioptions()->compaction_csd_policy==kCompactionLessThan4)
+      {
+        const std::vector<CompactionInputFiles>& compaction_input_file =
+            *(c->inputs());
+        int file_count=0;
+        uint64_t file_size_sum = 0;
+        int input_file_path_id = 0;
+        for (const auto& files_per_level : compaction_input_file) {  
+          file_count+=files_per_level.size();
+          for (const auto &file : files_per_level.files){
+            file_size_sum += file->fd.file_size;
+          }
+        }
+        if(file_count<=4)
+        {
+          std::unique_lock<std::mutex> csdguard(CSD_lock);
+          CSD_cv.wait(csdguard, [this]{  // 等待，直到Compaction_on_CSD_num_==0
+            if (Compaction_on_CSD_num_ == 0)
+              return true;
+            return false;
+          });
+
+          if(csdguard.owns_lock()){
+            if(CSD_Compaction_Status[0]==false){
+              // Occupy a CSD
+              acc_num = 0;
+              CSD_Compaction_Status[0] = true;
+              Compaction_on_CSD_num_++;
+              is_CSD_thread=true;
+              c.get()->SetCompactionOnCSD(acc_num);
+              printf("================DEBUG===============\n");
+              printf("compaction on csd, output level %d \t file size %lld\n", c.get()->output_level(), file_size_sum);
+            }
+          }
+          CSD_cv.notify_one();
+        }
+      }
+      
+    }
+
     CompactionJob compaction_job(
         job_context->job_id, c.get(), immutable_db_options_,
         mutable_db_options_, file_options_for_compaction_, versions_.get(),
@@ -3902,6 +3957,67 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
     *made_progress = true;
     TEST_SYNC_POINT_CALLBACK("DBImpl::BackgroundCompaction:AfterCompaction",
                              c->column_family_data());
+    if(c.get()->GetCompactionOnCSD()){
+      std::unique_lock<std::mutex> csdguard(CSD_lock);
+      Compaction_on_CSD_num_--;
+      // acc_num = c.get()->GetCompactionAccleratorId();
+      CSD_Compaction_Status[acc_num] = false;
+      is_CSD_thread = false;
+      CSD_cv.notify_one();
+      // printf("================RELEASE===============\n");
+      // printf("release acc_num %d\n", acc_num);
+      // printf("====================================\n");
+      printf("===RELESE===, acc_num: %d\n", acc_num);
+      // assert(0);
+    }else{
+      double compaction_speed = compaction_job.GetCompactionSpeed();
+      int output_level = c.get()->output_level();
+
+      std::unique_lock<std::mutex> csdguard(CSD_lock);
+      Level_Compaction_speed_count[output_level][level_speed_pos[output_level]] = compaction_speed;
+      level_speed_pos[output_level] = (level_speed_pos[output_level] + 1) % 10;
+      csdguard.unlock();
+
+      bool should_offload = true;
+      float speed_sum = 0;
+
+      for (int i = 0 ; i < 10 ; i++){
+        speed_sum += Level_Compaction_speed_count[output_level][i];
+        if(Level_Compaction_speed_count[output_level][i]==0){
+          should_offload = false;
+        }
+      }
+
+      if(speed_sum > 3000 || output_level==1){
+        should_offload = false;
+      }
+
+      printf("now valid layer: ");
+      for(int i=0 ;i<10; i++)
+      {
+        if(offload_Compaction_Level[i])
+          printf("1 ");
+        else 
+          printf("0 ");
+      }
+      printf("\n");
+      printf("now layer: %d speed: ", output_level);
+      std::cout<<"Compaction_on_CSD_num_" << Compaction_on_CSD_num_<<" status:"<<CSD_Compaction_Status[0]<<" "<<CSD_Compaction_Status[1]<<" "<<CSD_Compaction_Status[2]<<" "<<CSD_Compaction_Status[3]<<"\n";
+      for(int i=0;i<10; i++)
+      {
+        printf("%.2lf ", Level_Compaction_speed_count[output_level][i]);
+      }
+      printf("\n");
+
+      // if(offload_Compaction_Level[output_level]==false && should_offload == true){
+      //   printf("++++++++++++++++++++++++\n");
+      //   printf("++++++++++++++++++++++++\n");
+      //   printf("\n\n\n activate layer %d\n\n\n", output_level);
+      //   printf("++++++++++++++++++++++++\n");
+      //   printf("++++++++++++++++++++++++\n");
+      // }
+      offload_Compaction_Level[output_level] = should_offload;
+    }
   }
 
   if (status.ok() && !io_s.ok()) {
@@ -3947,6 +4063,7 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
   } else if (status.IsColumnFamilyDropped() || status.IsShutdownInProgress()) {
     // Ignore compaction errors found during shutting down
   } else {
+    std::cout<<"Compaction Warning!!!\n";
     ROCKS_LOG_WARN(immutable_db_options_.info_log, "Compaction error: %s",
                    status.ToString().c_str());
     if (!io_s.ok()) {
@@ -4018,6 +4135,16 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
       m->incomplete = true;
     }
     m->in_progress = false;  // not being processed anymore
+  }
+  if(is_CSD_thread){
+    std::unique_lock<std::mutex> csdguard(CSD_lock);
+    CSD_Compaction_Status[acc_num] = false;
+    Compaction_on_CSD_num_--;
+    CSD_cv.notify_one();
+    // printf("================EXTRA RELEASE===============\n");
+    // printf("release acc_num %d\n", acc_num);
+    // printf("====================================\n");
+    printf("===EXTRA RELEASE=== release acc_num %d\n", acc_num);
   }
   TEST_SYNC_POINT("DBImpl::BackgroundCompaction:Finish");
   return status;
@@ -4137,6 +4264,8 @@ void DBImpl::BuildCompactionJobInfo(
     const ColumnFamilyData* cfd, Compaction* c, const Status& st,
     const CompactionJobStats& compaction_job_stats, const int job_id,
     CompactionJobInfo* compaction_job_info) const {
+
+  // std::cout<<"Build Compaction Job Info\n";
   assert(compaction_job_info != nullptr);
   compaction_job_info->cf_id = cfd->GetID();
   compaction_job_info->cf_name = cfd->GetName();
