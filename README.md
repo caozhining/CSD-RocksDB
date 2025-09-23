@@ -70,3 +70,42 @@ After physically installing the SmartSSD, the device must be programmed with the
    ```
 
 If this step is successful, the SmartSSD is ready for use.
+
+### 3. Accelerator Kernel Compilation (Optional)
+
+This step is **optional**. If you already have pre-compiled kernels, you can skip to the next section.
+
+1. **Install Xilinx Vitis HLS**
+    Please follow the [official installation guide](https://www.amd.com/en/products/software/adaptive-socs-and-fpgas/vitis/vitis-hls.html).
+
+   > In our experiments, we used **Vitis HLS v2022.2**.
+
+2. **Locate Accelerator Kernels**
+    The accelerator kernels are located in the **`Accelerator kernel/`** directory. We provide multiple kernel implementations optimized for different key-value lengths. Select the kernel version that matches your workload.
+
+3. **Run Software Emulation**
+    To quickly validate functionality at the software level:
+
+   ```
+   make run TARGET=sw_emu PLATFORM=xilinx_u2_gen3x4_xdma_gc_2_202110_1
+   ```
+
+4. **Run Hardware Emulation**
+    For hardware-level validation (⚠️ much slower, recommend using smaller test datasets):
+
+   ```
+   make run TARGET=hw_emu PLATFORM=xilinx_u2_gen3x4_xdma_gc_2_202110_1
+   ```
+
+5. **Compile Hardware Kernel**
+    Finally, compile the hardware kernel for deployment:
+
+   ```
+   make run TARGET=hw PLATFORM=xilinx_u2_gen3x4_xdma_gc_2_202110_1
+   ```
+
+   The generated kernel binary will be stored under:
+
+   ```
+   build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/
+   ```
