@@ -36,7 +36,11 @@ After physically installing the SmartSSD, the device must be programmed with the
    Example output:
 
    ```
-   0000:6d:00.0
+   76:00.0 PCI bridge: Xilinx Corporation Device 9134
+   77:00.0 PCI bridge: Xilinx Corporation Device 9234
+   77:01.0 PCI bridge: Xilinx Corporation Device 9434
+   79:00.0 Processing accelerators: Xilinx Corporation Device 6987
+   79:00.1 Processing accelerators: Xilinx Corporation Device 6988
    ```
 
 2. Program the SmartSSD with the base image:
