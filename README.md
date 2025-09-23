@@ -109,3 +109,115 @@ This step is **optional**. If you already have pre-compiled kernels, you can ski
    ```
    build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/
    ```
+
+### 4. Using CSD-Enabled RocksDB
+
+Our repository provides an **extended version of RocksDB** with support for **CSD-offloaded compaction**. The modified source code is located under the **`rocksdb-9.0.0/`** directory.
+
+#### 4.1 Compilation
+
+The compilation process remains the same as the original RocksDB. For example:
+
+```
+make all -j8
+```
+
+For detailed instructions, please refer to the [official RocksDB documentation](https://github.com/facebook/rocksdb).
+
+------
+
+#### 4.2 New Options for CSD Compaction
+
+We added several new configuration options under **`advanced_options`** to control CSD-based compaction.
+
+##### (1) Select Compaction Device
+
+A new enum `CompactionDevice` specifies whether compaction runs on CPU or CSD:
+
+```
+enum CompactionDevice : char {
+  kCompactionOnCPU = 0x0,  // default: CPU compaction
+  kCompactionOnCSD = 0x1,  // CSD-offloaded compaction
+};
+```
+
+Usage example:
+
+```
+open_options_.compaction_device = kCompactionOnCSD;
+```
+
+By default, RocksDB performs compaction on the CPU. To enable CSD offloading, explicitly set the option to `kCompactionOnCSD`.
+
+------
+
+##### (2) Specify Accelerator Kernel Path
+
+You must specify the path to the compiled CSD accelerator kernel (`.xclbin`):
+
+```
+open_options_.CompactionKernelPath = "/home/usr/Compaction_kernel_path/compaction_k32v1024.xclbin";
+```
+
+------
+
+##### (3) Configure Accelerator Devices
+
+Define the number of accelerators and assign IDs for each CSD device.
+
+- First, resize the buffer:
+
+  ```
+  open_options_.Compaction_accelerator_id.resize(acc_num);
+  ```
+
+- Then, provide device IDs:
+
+  ```
+  open_options_.Compaction_accelerator_id = {1, 0, 2, 3};
+  ```
+
+> For details on accelerator ID mapping, please refer to **Appendix A: CSD–Accelerator Mapping**.
+
+------
+
+##### (4) Configure CSD Scheduling Policy
+
+We define scheduling strategies via `CompactionCSDPolicy`:
+
+```
+enum CompactionCSDPolicy : char {
+  kCompactionLessThan4 = 0x0,   // policy for <4 files
+  kCompactionCSDArray  = 0x1,   // array scheduling
+  kCompactionCSDArrayScheduleOff = 0x2, // array scheduling disabled
+};
+```
+
+Usage example:
+
+```
+open_options_.compaction_csd_policy = kCompactionCSDArray;
+```
+
+------
+
+##### (5) Configure SSTable File Size Policy
+
+We provide different strategies to control the output file size when CSD generates SSTables, defined in `CompactionCSDGenSSTfileSizePolicy`:
+
+```
+enum CompactionCSDGenSSTfileSizePolicy : char {
+  kCompactionCSDSSTavg      = 0x0, // output = input size average
+  KCompactionCSDSSTabove64  = 0x1, // output = 64MB
+  KCompactionCSDSSTlayer    = 0x2, // output = 64MB * level
+  kCompactionCSDSSTwtosmall = 0x3, // output ≈ max(input avg, 64MB) to avoid tiny SSTs
+};
+```
+
+Usage example:
+
+```
+open_options_.compaction_csd_gen_sst_file_size_policy = KCompactionCSDSSTlayer;
+```
+
+This option provides **initial tuning strategies**. You may further customize it according to your workload and RocksDB configuration. Future releases will offer extended support for dynamic integration with RocksDB’s configuration.
