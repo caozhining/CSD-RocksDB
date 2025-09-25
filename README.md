@@ -221,3 +221,20 @@ open_options_.compaction_csd_gen_sst_file_size_policy = KCompactionCSDSSTlayer;
 ```
 
 This option provides **initial tuning strategies**. You may further customize it according to your workload and RocksDB configuration. Future releases will offer extended support for dynamic integration with RocksDB’s configuration.
+
+#### 4.3 Multi-CSD Deployment
+
+When using **multiple CSD devices**, you must configure **`cf_paths`** to assign one path per CSD. Each column family (CF) can then be mapped to a different SmartSSD.
+
+Example configuration:
+
+```
+open_options_.cf_paths = {
+  "/mnt/csd0/db/",
+  "/mnt/csd1/db/",
+  "/mnt/csd2/db/",
+  "/mnt/csd3/db/"
+};
+```
+
+Here, each directory corresponds to a separate CSD device. Make sure the number of paths matches the number of CSDs you intend to use.
