@@ -699,20 +699,25 @@ ColumnFamilyData::ColumnFamilyData(
         // input_sst_buffer[now_csd_thread*4 + 2]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE | CL_MEM_EXT_PTR_XILINX, sizeof(char) * (256 * 1024 *1024), &sst_input_p2p_ext);
         // input_sst_buffer[now_csd_thread*4 + 3]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE | CL_MEM_EXT_PTR_XILINX, sizeof(char) * (256 * 1024 *1024), &sst_input_p2p_ext);
 
-        // input_metadata_buffer=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE, sizeof(int) * 15, NULL, &err);
-        input_metadata_buffer[i]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE, sizeof(uint64_t) * 64, NULL, &err);
-
+        
+      #ifndef CompactionOutputP2PDisable
         cl_mem_ext_ptr_t sst_output_p2p_ext;
         sst_output_p2p_ext = {XCL_MEM_EXT_P2P_BUFFER, nullptr, 0};
         output_datablock_buffer[i]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE | CL_MEM_EXT_PTR_XILINX, sizeof(char) * (480 * 4 * 1024 *1024), &sst_output_p2p_ext);
         cl_mem_ext_ptr_t sst_output_index_p2p_ext;
         sst_output_index_p2p_ext = {XCL_MEM_EXT_P2P_BUFFER, nullptr, 0};
-        output_indexblock_buffer[i]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE | CL_MEM_EXT_PTR_XILINX, sizeof(char) * (8 * 1024 *1024), &sst_output_index_p2p_ext);
+        output_indexblock_buffer[i]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE | CL_MEM_EXT_PTR_XILINX, sizeof(char) * (16 * 1024 *1024), &sst_output_index_p2p_ext);
         // output_indexblock_buffer[i]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE, sizeof(char) * (8 * 1024 *1024), NULL, &err);
 
         // output_datablock_buffer=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE , sizeof(char) * (768 * 1024 *1024), NULL, &err);
         // output_indexblock_buffer=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE, sizeof(char) * (8 * 1024 *1024), NULL, &err);
+      #else
+        output_datablock_buffer[i]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE, sizeof(char) * (480 * 4 * 1024 *1024), NULL, &err);
+        output_indexblock_buffer[i]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE, sizeof(char) * (16 * 1024 *1024), NULL, &err);
+      #endif
 
+        // input_metadata_buffer=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE, sizeof(int) * 15, NULL, &err);
+        input_metadata_buffer[i]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_WRITE, sizeof(uint64_t) * 64, NULL, &err);
         output_metadata_buffer[i]=cl::Buffer(Compaction_csd_context[i], CL_MEM_READ_ONLY, sizeof(uint64_t) * (256 * 4), NULL, &err);
 
         // Compaction_accelerator_kernel.setArg(0, input_sst_buffer[now_csd_thread*4 + 0]);
@@ -1274,6 +1279,19 @@ Compaction* ColumnFamilyData::PickCompaction(
   auto* result = compaction_picker_->PickCompaction(
       GetName(), mutable_options, mutable_db_options, current_->storage_info(),
       log_buffer);
+  if (result != nullptr) {
+    result->FinalizeInputInfo(current_);
+  }
+  return result;
+}
+
+Compaction* ColumnFamilyData::PickCompactiontoCSD(
+    const MutableCFOptions& mutable_options,
+    const MutableDBOptions& mutable_db_options, LogBuffer* log_buffer, uint32_t path_id, std::vector<bool> valid_layer) {
+  auto* result = compaction_picker_->PickCompactiontoCSD(
+      GetName(), mutable_options, mutable_db_options, current_->storage_info(),
+      log_buffer, path_id, valid_layer
+    );
   if (result != nullptr) {
     result->FinalizeInputInfo(current_);
   }

@@ -216,14 +216,21 @@ std::string CoreWorkload::BuildKeyName(uint64_t key_num) {
   if (!ordered_inserts_) {
     key_num = utils::Hash(key_num);
   }
-  std::string prekey = "user";
-  std::string value = std::to_string(key_num);
+  // std::string prekey = "user";
+  // // std::string value = std::to_string(key_num);
+  // char buf[17];                 // 16 个 hex + '\0'
+  // std::snprintf(buf, sizeof(buf), "%016llX", (unsigned long long)key_num);
+  // std::string value(buf); 
+  // return value.append("0000000000000000");
+  std::string output_key = std::to_string(key_num);
+
+  return output_key;
   // int fill = std::max(0, zero_padding_ - static_cast<int>(value.size()));
-  int fill = std::max(0, (24 - (4 + static_cast<int>(value.size()))));
-  if((4+fill+static_cast<int>(value.size())) != 24){
-    printf("!!!!!!!!!\n!!!!!!!!\nERROR: key length != 24, key num is %lu, key size is %d\n!!!!!!!!\n", key_num, (4+fill+static_cast<int>(value.size())));
-  }
-  return prekey.append(fill, '0').append(value);
+  // int fill = std::max(0, (24 - (4 + static_cast<int>(value.size()))));
+  // if((4+fill+static_cast<int>(value.size())) != 24){
+  //   printf("!!!!!!!!!\n!!!!!!!!\nERROR: key length != 24, key num is %lu, key size is %d\n!!!!!!!!\n", key_num, (4+fill+static_cast<int>(value.size())));
+  // }
+  // return prekey.append(fill, '0').append(value);
 }
 
 void CoreWorkload::BuildValues(std::vector<ycsbc::DB::Field> &values) {

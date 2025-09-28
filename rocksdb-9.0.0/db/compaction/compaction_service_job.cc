@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <sstream>
 #include <errno.h>
+#include <filesystem>
 
 #include "krnl_host.h"
 
@@ -152,6 +153,16 @@ CompactionJob::ProcessKeyValueCompactionOnCSD(
       uint32_t now_path_id = file->fd.GetPathId();
       std::string compaction_file_name = MakeTableFileName(cfd->ioptions()->cf_paths[now_path_id].path, input_fd_num);
 
+      // std::string output_file_name = MakeTableFileName("/mnt/smartssd1/czn/key_test/test9",input_fd_num);
+
+      // try {
+      //   std::filesystem::copy_file(compaction_file_name, output_file_name,
+      //   std::filesystem::copy_options::overwrite_existing);
+      //   std::cout << "文件拷贝成功！\n";
+      // } catch (const std::filesystem::filesystem_error& e) {
+      //   std::cerr << "拷贝失败: " << e.what() << '\n';
+      // }
+
       fd[file_count] = open(compaction_file_name.c_str(), O_RDWR | O_DIRECT);
       // filestream[file_count]=std::fstream(compaction_file_name, std::ios::in);
 
@@ -268,10 +279,11 @@ CompactionJob::ProcessKeyValueCompactionOnCSD(
 
   chrono_print_time(prev_time, "prepare file", ss);
 
-  uint64_t index_block_buffer_size = 1024 * 1024 * 8;
+  uint64_t index_block_buffer_size = 1024 * 1024 * 16;
   uint64_t sst_buffer_size = 1024 * 1024 * 768;
   uint64_t host_data_size = 15;
 
+#ifndef CompactionInputP2PDisable
   // Alloc device memory
   cl_mem_ext_ptr_t file0_device_ext;
   file0_device_ext = {XCL_MEM_EXT_P2P_BUFFER, nullptr, 0};
@@ -288,6 +300,13 @@ CompactionJob::ProcessKeyValueCompactionOnCSD(
   cl_mem_ext_ptr_t file3_device_ext;
   file3_device_ext = {XCL_MEM_EXT_P2P_BUFFER, nullptr, 0};
   cl::Buffer file3_device(context, CL_MEM_READ_WRITE | CL_MEM_EXT_PTR_XILINX, file_buffer_size[3], &file3_device_ext);
+
+#else
+  cl::Buffer file0_device(context, CL_MEM_READ_WRITE, file_buffer_size[0], NULL, &err);
+  cl::Buffer file1_device(context, CL_MEM_READ_WRITE, file_buffer_size[1], NULL, &err);
+  cl::Buffer file2_device(context, CL_MEM_READ_WRITE, file_buffer_size[2], NULL, &err);
+  cl::Buffer file3_device(context, CL_MEM_READ_WRITE, file_buffer_size[3], NULL, &err);
+#endif
 
   // cl::Buffer host_data(context, CL_MEM_READ_ONLY, sizeof(int)* host_data_size, NULL, &err);
 
@@ -350,7 +369,7 @@ CompactionJob::ProcessKeyValueCompactionOnCSD(
   host_data_buffer = (int*)q.enqueueMapBuffer(host_data, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, sizeof(int)*host_data_size, NULL, NULL, &err);
 #endif
 
-  sst_result = (char*)q.enqueueMapBuffer(sst_buffer, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, sizeof(char) * (450 * 4 * 1024 *1024), NULL, NULL, &err);
+  sst_result = (char*)q.enqueueMapBuffer(sst_buffer, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, sizeof(char) * (480 * 4 * 1024 *1024), NULL, NULL, &err);
   index_block_result = (char*)q.enqueueMapBuffer(index_block_buffer, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, sizeof(char)* index_block_buffer_size, NULL, NULL, &err);
 
   device_output_data = (uint64_t *)q.enqueueMapBuffer(output_data, CL_TRUE, CL_MAP_READ, 0, sizeof(uint64_t) * (CSD_PPS_KERNEL_SIZE + 20), NULL, NULL, &err);
@@ -394,8 +413,6 @@ CompactionJob::ProcessKeyValueCompactionOnCSD(
   init[0] = 1;
 
   // std::cout << "entries: " << kv_sums[1] << " " << kv_sums[2] << " " << kv_sums[3] << " " << kv_sums[4] << std::endl;
-
-  q.enqueueMigrateMemObjects({host_data}, 0);
 
   chrono_print_time(prev_time, "prepare host", ss);
 
@@ -484,6 +501,12 @@ CompactionJob::ProcessKeyValueCompactionOnCSD(
   
   std::cout<<"--------------------\n";
 
+#ifndef CompactionInputP2PDisable
+  q.enqueueMigrateMemObjects({host_data}, 0);
+#else
+  q.enqueueMigrateMemObjects({file0_device, file1_device, file2_device, file3_device, host_data}, 0);
+#endif
+
   chrono_print_time(prev_time, "read file", ss);
 
   std::vector<cl::Event> events_kernel(1);
@@ -504,8 +527,11 @@ CompactionJob::ProcessKeyValueCompactionOnCSD(
 
   std::cout<<"---- Kernel Time: "<<kerneltime<<"ns -----\n";
 
-  
+#ifndef CompactionOutputP2PDisable
   q.enqueueMigrateMemObjects({output_data}, CL_MIGRATE_MEM_OBJECT_HOST, &events_kernel, nullptr);
+#else
+  q.enqueueMigrateMemObjects({sst_buffer, index_block_buffer, output_data}, CL_MIGRATE_MEM_OBJECT_HOST, &events_kernel, nullptr);
+#endif
   // q.enqueueMigrateMemObjects({sst_buffer}, CL_MIGRATE_MEM_OBJECT_HOST);
   // q.enqueueMigrateMemObjects({index_block_buffer}, CL_MIGRATE_MEM_OBJECT_HOST);
   q.finish();
@@ -625,6 +651,7 @@ CompactionJob::ProcessKeyValueCompactionOnCSD(
 
     auto tgt_file = TableFileName(compaction->immutable_options()->cf_paths,
                                   file_id, output_path_id);
+    // std::string tgt_file = "/mnt/smartssd1/czn/key_test/test2/" + std::to_string(file_id) + ".sst";
 
     // std::cout<<"outputfile: "<<file_id<<"\n";
 
@@ -688,15 +715,18 @@ CompactionJob::ProcessKeyValueCompactionOnCSD(
     // 第二种： 在主机上写一个buffer，然后单起slice3写下去
 
     int now_write_plan = 1;
+
+    int64_t create_time = 0;
+    db_options_.clock->GetCurrentTime(&create_time);
     
     if(now_write_plan==1){ 
       index_block_offset = CSD_ALIGN_TO_4K(sstlength);
       index_block_write_size = indexlength;
       meta_data_offset = index_block_write_size + index_block_offset;
       pp_index = 0;
-      metaindexblock_index = 0;
+      metaindexblock_index = 0; 
 
-      CSDTableProperties table_properties(db_id_, db_session_id_, file_id, indexlength-5);
+      CSDTableProperties table_properties(db_id_, db_session_id_, file_id, indexlength-5, create_time);
       table_properties.putProperties(properties, pp_index, metaindexblock, metaindexblock_index, meta_data_offset, device_output_data + offset_pps[i]);
 
       // metaindexblock_offset: indexlength实际上是indexblock的index变量，所以需要加上hash长度5；pp_index同理
@@ -779,7 +809,7 @@ CompactionJob::ProcessKeyValueCompactionOnCSD(
       pp_index = 0;
       metaindexblock_index = 0;
 
-      CSDTableProperties table_properties(db_id_, db_session_id_, file_id, indexlength-5);
+      CSDTableProperties table_properties(db_id_, db_session_id_, file_id, indexlength-5, create_time);
       table_properties.putProperties(properties, pp_index, metaindexblock, metaindexblock_index, meta_data_offset, device_output_data + offset_pps[i]);
 
       // metaindexblock_offset: indexlength实际上是indexblock的index变量，所以需要加上hash长度5；pp_index同理
@@ -920,7 +950,7 @@ CompactionJob::ProcessKeyValueCompactionOnCSD(
     
     meta.fd = FileDescriptor(file_id, output_path_id, file_size,
                               (device_output_data + offset_pps[i])[CSD_PPS_MINSEQ_OFF], (device_output_data + offset_pps[i])[CSD_PPS_MAXSEQ_OFF]);
-    
+    meta.num_entries = entries;
     // std::cout<<"sst write close\n";
 
     // std::cout<<"min seqno: "<<(device_output_data + offset_pps[i])[12]<<" max seqno:"<<(device_output_data + offset_pps[i])[13]<<"\n";
@@ -954,7 +984,19 @@ CompactionJob::ProcessKeyValueCompactionOnCSD(
                                       0);
     outputfile_total_size += meta.fd.GetFileSize();
     outputfile_total_entry += entries;
+
+    // // For debug
+    // std::string output_file_name = MakeTableFileName("/mnt/smartssd1/czn/key_test/test9", file_id);
+
+    // try {
+    //   std::filesystem::copy_file(tgt_file , output_file_name,
+    //   std::filesystem::copy_options::overwrite_existing);
+    //   std::cout << "文件拷贝成功！\n";
+    // } catch (const std::filesystem::filesystem_error& e) {
+    //   std::cerr << "拷贝失败: " << e.what() << '\n';
+    // }
   }
+  // while(1);
 
   // for (int i = 0; i < CSD_MAX_OUTPUT_FILE_NUM; i++)
   // {

@@ -45,6 +45,7 @@ enum CompactionDevice : char {
 enum CompactionCSDPolicy : char {
   kCompactionLessThan4 = 0x0,  // CSD compaction policy for less than 4 files
   kCompactionCSDArray = 0x1,  // CSD compaction policy for array
+  kCompactionCSDArrayScheduleOff = 0x2, // CSD compaction policy for array with schedule off
 };
 
 enum CompactionCSDGenSSTfileSizePolicy : char {

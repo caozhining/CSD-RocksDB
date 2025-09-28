@@ -1,0 +1,1512 @@
+Set seed to 1756207580820649 because --seed was 0
+======================================
+======================================
+================  run  ===============
+======================================
+Initializing RocksDB Options from the specified file
+before open flags
+Initializing RocksDB Options from command-line flags
+Integrated BlobDB: blob cache disabled
+before general
+now new column family
+Before Print Header
+Keys:       24 bytes each (+ 0 bytes user-defined timestamp)
+Values:     1024 bytes each (512 bytes after compression)
+Entries:    1000000000
+Prefix:    0 bytes
+Keys per prefix:    0
+RawSize:    999450.7 MB (estimated)
+FileSize:   511169.4 MB (estimated)
+Write rate: 0 bytes/second
+Read rate: 0 ops/second
+Compression: NoCompression
+Compression sampling rate: 0
+Memtablerep: SkipListFactory
+Perf Level: 1
+WARNING: Assertions are enabled; benchmarks unnecessarily slow
+------------------------------------------------
+SETTING CF_PATH
+======================================
+======================================
+================write=================
+======================================
+Initializing RocksDB Options from the specified file
+before open flags
+Initializing RocksDB Options from command-line flags
+Integrated BlobDB: blob cache disabled
+before general
+now new column family
+/mnt/smartssd0/czn/raid_csd_test0
+/mnt/smartssd1/czn/raid_csd_test1
+/mnt/smartssd2/czn/raid_csd_test2
+/mnt/smartssd3/czn/raid_csd_test3
+Loading: '/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v1024_20250825.xclbin'
+Trying to program device[1]: xilinx_u2_gen3x4_xdma_gc_base_2
+Device[1]: program successful!
+Trying to program device[0]: xilinx_u2_gen3x4_xdma_gc_base_2
+Device[0]: program successful!
+Trying to program device[2]: xilinx_u2_gen3x4_xdma_gc_base_2
+Device[2]: program successful!
+Trying to program device[3]: xilinx_u2_gen3x4_xdma_gc_base_2
+Device[3]: program successful!
+DB path: [/mnt/smartssd3/czn/rocksdb_csd]
+Before Run Benchmark!!
+1 
+764 1
+2 
+766 2
+3 
+768 3
+0 
+770 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 0 0 0 0, output file allocate: 0 0 0 0
+1 
+774 1
+2 
+778 2
+verify time: 0.49 ms
+** cpu compaction time: 1081.91 ms
+** cpu run time: 1083.03 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 1 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+244.14 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 
+3 
+780 3
+0 
+782 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 0 0 0 0, output file allocate: 0 0 0 0
+1 
+786 1
+2 
+788 2
+3 
+792 3
+0 
+796 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 2 2 2, output file allocate: 0 0 0 0
+1 
+799 1
+verify time: 2.24 ms
+** cpu compaction time: 2081.95 ms
+** cpu run time: 2092.76 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 1 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+244.14 253.72 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 0 0 0 0, output file allocate: 1 1 1 1
+verify time: 0.51 ms
+** cpu compaction time: 680.758 ms
+** cpu run time: 681.523 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+388.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 0 0 0 0, output file allocate: 0 0 0 0
+2 
+805 2
+3 
+807 3
+0 
+811 0
+1 
+814 1
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 2 1 2, output file allocate: 0 0 0 0
+2 
+818 2
+3 
+820 3
+verify time: 0.93 ms
+** cpu compaction time: 2215.55 ms
+** cpu run time: 2224.95 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 1 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+244.14 253.72 265.66 0.00 0.00 0.00 0.00 0.00 0.00 0.00 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 1 1, output file allocate: 1 1 1 1
+verify time: 0.36 ms
+** cpu compaction time: 748.267 ms
+** cpu run time: 749.467 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+388.00 353.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 
+0 
+825 0
+1 
+827 1
+2 
+831 2
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 2 2, output file allocate: 0 0 0 0
+3 
+836 3
+verify time: 1.36 ms
+** cpu compaction time: 1833.04 ms
+** cpu run time: 1834.52 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+229.15 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 
+0 
+839 0
+verify time: 0.70 ms
+** cpu compaction time: 1177.38 ms
+** cpu run time: 1188 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+388.00 353.00 280.43 0.00 0.00 0.00 0.00 0.00 0.00 0.00 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 0 0 0 0, output file allocate: 0 0 0 0
+1 
+842 1
+2 
+845 2
+3 
+847 3
+0 
+849 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 4, output file allocate: 0 0 0 0
+1 
+852 1
+verify time: 0.34 ms
+** cpu compaction time: 604.367 ms
+** cpu run time: 604.926 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+388.00 353.00 280.43 437.05 0.00 0.00 0.00 0.00 0.00 0.00 
+2 
+856 2
+3 
+860 3
+0 
+863 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 5, output file allocate: 0 0 0 0
+1 
+868 1
+verify time: 0.53 ms
+** cpu compaction time: 659.186 ms
+** cpu run time: 660.128 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+388.00 353.00 280.43 437.05 400.70 0.00 0.00 0.00 0.00 0.00 
+2 
+871 2
+verify time: 1.47 ms
+** cpu compaction time: 3651.61 ms
+** cpu run time: 3653.48 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 1 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+244.14 253.72 265.66 245.01 0.00 0.00 0.00 0.00 0.00 0.00 
+-- DEBUG: Array party l - 0  r - 0 , file pos allocate: 1 2 2 5, output file allocate: 0 0 0 0
+-- DEBUG: Array party l - 2  r - 3 , file pos allocate: 2 2 2 4, output file allocate: 0 0 2 0
+3 
+878 3
+verify time: 0.76 ms
+** cpu compaction time: 474.531 ms
+** cpu run time: 475.599 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+229.15 426.17 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 
+verify time: 0.43 ms
+** cpu compaction time: 517.884 ms
+** cpu run time: 518.603 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+229.15 426.17 390.50 0.00 0.00 0.00 0.00 0.00 0.00 0.00 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 0 0 0 0, output file allocate: 0 0 0 0
+0 
+883 0
+1 
+886 1
+2 
+888 2
+3 
+890 3
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 2 2 4, output file allocate: 0 0 0 0
+0 
+894 0
+1 
+897 1
+2 
+900 2
+verify time: 0.94 ms
+** cpu compaction time: 1082.5 ms
+** cpu run time: 1117.38 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+388.00 353.00 280.43 437.05 400.70 244.01 0.00 0.00 0.00 0.00 
+3 
+903 3
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 2 2 5, output file allocate: 0 0 0 0
+0 
+907 0
+1 
+910 1
+verify time: 0.60 ms
+** cpu compaction time: 911.661 ms
+** cpu run time: 914.55 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+388.00 353.00 280.43 437.05 400.70 244.01 289.73 0.00 0.00 0.00 
+2 
+913 2
+3 
+916 3
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 2 2 6, output file allocate: 0 0 0 0
+0 
+919 0
+1 
+922 1
+verify time: 0.43 ms
+** cpu compaction time: 771.439 ms
+** cpu run time: 785.18 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+388.00 353.00 280.43 437.05 400.70 244.01 289.73 342.40 0.00 0.00 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 1 6, output file allocate: 0 0 0 0
+2 
+926 2
+3 
+929 3
+verify time: 3.37 ms
+** cpu compaction time: 5793.44 ms
+** cpu run time: 5831.79 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 1 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+244.14 253.72 265.66 245.01 233.19 0.00 0.00 0.00 0.00 0.00 
+-- DEBUG: Array party l - 1  r - 2 , file pos allocate: 4 2 3 5, output file allocate: 0 2 1 0
+-- DEBUG: Array party l - 0  r - 1 , file pos allocate: 4 1 4 5, output file allocate: 0 2 0 0
+-- DEBUG: Array party l - 3  r - 3 , file pos allocate: 4 2 4 4, output file allocate: 0 0 0 0
+-- DEBUG: Array party l - 3  r - 3 , file pos allocate: 4 2 4 4, output file allocate: 0 0 0 0
+-- DEBUG: Array party l - 2  r - 3 , file pos allocate: 4 2 3 5, output file allocate: 0 0 2 0
+-- DEBUG: Array party l - 3  r - 3 , file pos allocate: 4 2 4 4, output file allocate: 0 0 0 0
+-- DEBUG: Array party l - 3  r - 3 , file pos allocate: 4 2 4 4, output file allocate: 0 0 0 0
+0 
+938 0
+1 
+942 1
+verify time: 14.08 ms
+** cpu compaction time: 683.587 ms
+** cpu run time: 886.975 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+229.15 426.17 390.50 61.54 0.00 0.00 0.00 0.00 0.00 0.00 
+verify time: 15.26 ms
+** cpu compaction time: 887.009 ms
+** cpu run time: 902.643 ms
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 3 2 4 4, output file allocate: 1 2 0 0
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+229.15 426.17 390.50 61.54 204.11 0.00 0.00 0.00 0.00 0.00 
+-- DEBUG: Array party l - 2  r - 2 , file pos allocate: 4 2 3 6, output file allocate: 0 0 0 0
+2 
+956 2
+verify time: 0.62 ms
+** cpu compaction time: 552.068 ms
+** cpu run time: 572.997 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+229.15 426.17 390.50 61.54 204.11 356.90 0.00 0.00 0.00 0.00 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 2 1 4, output file allocate: 0 0 0 0
+verify time: 9.14 ms
+** cpu compaction time: 1618.77 ms
+** cpu run time: 1637.34 ms
+verify time: 0.52 ms
+** cpu compaction time: 1627.68 ms
+** cpu run time: 1641.18 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+229.15 426.17 390.50 61.54 204.11 356.90 117.90 0.00 0.00 0.00 
+-- DEBUG: Array party l - 0  r - 1 , file pos allocate: 3 3 6 6, output file allocate: 2 1 0 0
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+229.15 426.17 390.50 61.54 204.11 356.90 117.90 180.75 0.00 0.00 
+3 
+967 3
+verify time: 25.40 ms
+** cpu compaction time: 1834.27 ms
+** cpu run time: 1902.19 ms
+verify time: 0.65 ms
+** cpu compaction time: 1991.8 ms
+** cpu run time: 2038.8 ms
+verify time: 0.63 ms
+** cpu compaction time: 2013.02 ms
+** cpu run time: 2038.86 ms
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+229.15 426.17 390.50 61.54 204.11 356.90 117.90 180.75 98.64 0.00 
+now valid layer: 0 0 0 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+229.15 426.17 390.50 61.54 204.11 356.90 117.90 180.75 98.64 91.17 
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+89.81 426.17 390.50 61.54 204.11 356.90 117.90 180.75 98.64 91.17 
+verify time: 1.75 ms
+** cpu compaction time: 3124.29 ms
+** cpu run time: 3217.46 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+388.00 353.00 280.43 437.05 400.70 244.01 289.73 342.40 274.72 0.00 
+verify time: 27.99 ms
+** cpu compaction time: 1610.69 ms
+** cpu run time: 1638.83 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+89.81 167.37 390.50 61.54 204.11 356.90 117.90 180.75 98.64 91.17 
+0 
+972 0
+verify time: 0.87 ms
+** cpu compaction time: 1150.19 ms
+** cpu run time: 1151.18 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+89.81 167.37 234.37 61.54 204.11 356.90 117.90 180.75 98.64 91.17 
+1 
+974 1
+verify time: 0.67 ms
+** cpu compaction time: 1590.62 ms
+** cpu run time: 1592.03 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+388.00 353.00 280.43 437.05 400.70 244.01 289.73 342.40 274.72 207.58 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 0 0 0 0, output file allocate: 0 0 0 0
+2 
+978 2
+3 
+980 3
+0 
+984 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 2 4, output file allocate: 0 0 0 0
+1 
+989 1
+verify time: 0.58 ms
+** cpu compaction time: 627.337 ms
+** cpu run time: 628.171 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+421.05 353.00 280.43 437.05 400.70 244.01 289.73 342.40 274.72 207.58 
+2 
+992 2
+3 
+997 3
+0 
+999 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 2 5, output file allocate: 0 0 0 0
+1 
+1004 1
+2 
+1008 2
+verify time: 0.63 ms
+** cpu compaction time: 896.411 ms
+** cpu run time: 909.971 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+421.05 294.68 280.43 437.05 400.70 244.01 289.73 342.40 274.72 207.58 
+3 
+1011 3
+0 
+1015 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 2 6, output file allocate: 0 0 0 0
+1 
+1019 1
+verify time: 0.41 ms
+** cpu compaction time: 578.515 ms
+** cpu run time: 580.871 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+421.05 294.68 456.56 437.05 400.70 244.01 289.73 342.40 274.72 207.58 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 1 6, output file allocate: 0 0 0 0
+2 
+1024 2
+3 
+1028 3
+0 
+1031 0
+verify time: 3.27 ms
+** cpu compaction time: 5840.43 ms
+** cpu run time: 5862.16 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 1 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+244.14 253.72 265.66 245.01 233.19 269.40 0.00 0.00 0.00 0.00 
+-- DEBUG: Array party l - 1  r - 2 , file pos allocate: 5 8 8 12, output file allocate: 0 3 0 0
+================DEBUG===============
+acc num 3 output level 2 	 file size 291048626
+====================================
+-- DEBUG: Array party l - 0  r - 0 , file pos allocate: 4 9 8 12, output file allocate: 0 0 0 0
+================DEBUG===============
+acc num 1 output level 2 	 file size 157208670
+====================================
+-- DEBUG: Array party l - 0  r - 0 , file pos allocate: 4 9 8 12, output file allocate: 0 0 0 0
+1756207611729 ms at outer start
+now acc id 3
+================DEBUG===============
+acc num 0 output level 2 	 file size 157138510
+====================================
+-- DEBUG: Array party l - 2  r - 3 , file pos allocate: 5 9 8 11, output file allocate: 0 0 2 0
+ file size tune policy : KCompactionCSDSSTlayer 291069426 -> 520093696 2
+gen_sst_file_limit 520093696
+totol used memory space 2415921352
+1
+1756207611740 ms at outer start
+1756207611740 ms at outer start
+now acc id 0
+now acc id 1
+-- DEBUG: Array party l - 2  r - 2 , file pos allocate: 5 9 7 12, output file allocate: 0 0 0 0
+ file size tune policy : KCompactionCSDSSTlayer 157159310 -> 520093696 2
+gen_sst_file_limit 520093696
+totol used memory space 2415921352
+1
+ file size tune policy : KCompactionCSDSSTlayer 157229470 -> 520093696 2
+gen_sst_file_limit 520093696
+totol used memory space 2415921352
+1
+================DEBUG===============
+acc num 2 output level 2 	 file size 108135428
+====================================
+-- DEBUG: Array party l - 1  r - 2 , file pos allocate: 5 8 7 12, output file allocate: 0 3 0 0
+1756207611750 ms at outer start
+now acc id 2
+ file size tune policy : KCompactionCSDSSTlayer 108156228 -> 520093696 2
+gen_sst_file_limit 520093696
+totol used memory space 2415921352
+1
+-- DEBUG: Array party l - 2  r - 3 , file pos allocate: 5 9 6 12, output file allocate: 0 0 3 0
+--------------------
+sst read : 40719283
+--------------------
+--------------------
+sst read : 67416145
+--------------------
+--------------------
+1 
+1038 1
+verify time: 0.30 ms
+** cpu compaction time: 322.965 ms
+** cpu run time: 323.856 ms
+sst read : 134832010
+--------------------
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_4 status:1 1 1 1
+89.81 167.37 234.37 387.13 204.11 356.90 117.90 180.75 98.64 91.17 
+-- DEBUG: Array party l - 0  r - 2 , file pos allocate: 4 9 9 11, output file allocate: 3 0 0 0
+sst read : 88800063
+--------------------
+---- Kernel Time: 258472386ns -----
+=====================CSDWrite==============acc:2===
+CSD write SST id: 1041, path 2, sst_length is 107545800, index_length 412700, entries 101602
+output act file size 107962206
+sst read : 89790417
+--------------------
+sst read : 67416553
+--------------------
+index_write_size = 413696
+=====================CSDWrite==============acc:2===
+Empty file, sst_length is 0, index_length 0, entries 0
+=====================CSDWrite==============acc:2===
+Empty file, sst_length is 0, index_length 0, entries 0
+=====================CSDWrite==============acc:2===
+Empty file, sst_length is 0, index_length 0, entries 0
+-----------compaction all times-----------
+****** program device time: 0.019019 ms
+****** prepare file time: 0.075149 ms
+****** opencl time: 0.007831 ms
+****** set arg time: 0.739004 ms
+****** enqueueMapBuffer time: 182.108 ms
+****** prepare host time: 0.027335 ms
+****** read file time: 57.5883 ms
+****** kernel time: 258.652 ms
+****** prepare write time: 0.135723 ms
+****** write file time: 81.4455 ms
+****** tail handle time: 0.194189 ms
+all_time: 1954.38 ms
+----------------------------------------------
+1756207612331 ms at outer end
+verify time: 2.44 ms
+** csd compaction time: 581.027 ms
+** csd run time: 584.276 ms
+sst read : 67418253
+--------------------
+===RELESE===, acc_num: 2
+-- DEBUG: Array party l - 0  r - 0 , file pos allocate: 4 9 10 11, output file allocate: 0 0 0 0
+--------------------
+verify time: 0.83 ms
+** cpu compaction time: 636.343 ms
+** cpu run time: 637.372 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_3 status:1 1 0 1
+89.81 167.37 234.37 387.13 339.56 356.90 117.90 180.75 98.64 91.17 
+-- DEBUG: Array party l - 0  r - 0 , file pos allocate: 4 9 11 12, output file allocate: 0 0 0 0
+================DEBUG===============
+acc num 2 output level 2 	 file size 107932360
+====================================
+1756207612493 ms at outer start
+now acc id 2
+ file size tune policy : KCompactionCSDSSTlayer 107953160 -> 520093696 2
+gen_sst_file_limit 520093696
+totol used memory space 2415921352
+1
+sst read : 89720196
+--------------------
+--------------------
+sst read : 40516130
+--------------------
+sst read : 67418314
+--------------------
+sst read : 67416230
+--------------------
+2 
+1048 2
+verify time: 0.42 ms
+** cpu compaction time: 524.88 ms
+** cpu run time: 525.488 ms
+verify time: 0.26 ms
+** cpu compaction time: 270.324 ms
+** cpu run time: 270.794 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_4 status:1 1 1 1
+89.81 167.37 234.37 387.13 339.56 395.31 117.90 180.75 98.64 91.17 
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_4 status:1 1 1 1
+89.81 167.37 234.37 387.13 339.56 395.31 399.48 180.75 98.64 91.17 
+-- DEBUG: Array party l - 2  r - 2 , file pos allocate: 8 9 10 12, output file allocate: 0 0 0 0
+-- DEBUG: Array party l - 3  r - 3 , file pos allocate: 8 9 11 10, output file allocate: 0 0 0 0
+---- Kernel Time: 258204887ns -----
+=====================CSDWrite==============acc:2===
+CSD write SST id: 1053, path 0, sst_length is 107348949, index_length 411936, entries 101416
+output act file size 107764834
+index_write_size = 413696
+=====================CSDWrite==============acc:2===
+Empty file, sst_length is 0, index_length 0, entries 0
+=====================CSDWrite==============acc:2===
+Empty file, sst_length is 0, index_length 0, entries 0
+=====================CSDWrite==============acc:2===
+Empty file, sst_length is 0, index_length 0, entries 0
+-----------compaction all times-----------
+****** program device time: 0.015252 ms
+****** prepare file time: 0.06035 ms
+****** opencl time: 0.007945 ms
+****** set arg time: 6.42335 ms
+****** enqueueMapBuffer time: 0.33699 ms
+****** prepare host time: 0.011922 ms
+****** read file time: 64.5279 ms
+****** kernel time: 258.308 ms
+****** prepare write time: 0.139191 ms
+****** write file time: 81.9516 ms
+****** tail handle time: 0.180634 ms
+all_time: 507.426 ms
+----------------------------------------------
+1756207612905 ms at outer end
+verify time: 2.10 ms
+** csd compaction time: 411.991 ms
+** csd run time: 414.285 ms
+---- Kernel Time: 375778375ns -----
+=====================CSDWrite==============acc:0===
+CSD write SST id: 1054, path 0, sst_length is 130022064, index_length 499044, entries 122836
+output act file size 130523302
+===RELESE===, acc_num: 2
+-- DEBUG: Array party l - 2  r - 2 , file pos allocate: 8 9 9 12, output file allocate: 0 0 0 0
+verify time: 0.23 ms
+** cpu compaction time: 272.158 ms
+** cpu run time: 272.642 ms
+---- Kernel Time: 700453657ns -----
+=====================CSDWrite==============acc:3===
+CSD write SST id: 1057, path 2, sst_length is 130022103, index_length 499044, entries 122836
+output act file size 130523302
+index_write_size = 503808
+=====================CSDWrite==============acc:0===
+CSD write SST id: 1058, path 0, sst_length is 26274195, index_length 100460, entries 24822
+output act file size 26377132
+index_write_size = 102400
+=====================CSDWrite==============acc:0===
+Empty file, sst_length is 0, index_length 0, entries 0
+=====================CSDWrite==============acc:0===
+Empty file, sst_length is 0, index_length 0, entries 0
+-----------compaction all times-----------
+****** program device time: 0.017492 ms
+****** prepare file time: 0.062173 ms
+****** opencl time: 0.008458 ms
+****** set arg time: 534.768 ms
+****** enqueueMapBuffer time: 170.908 ms
+****** prepare host time: 0.018234 ms
+****** read file time: 95.4632 ms
+****** kernel time: 375.995 ms
+****** prepare write time: 0.141304 ms
+****** write file time: 128.478 ms
+****** tail handle time: 0.186273 ms
+all_time: 1712.98 ms
+----------------------------------------------
+1756207613046 ms at outer end
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_3 status:1 1 0 1
+89.81 167.37 234.37 387.13 339.56 395.31 399.48 396.52 98.64 91.17 
+-- DEBUG: Array party l - 3  r - 3 , file pos allocate: 8 9 12 11, output file allocate: 0 0 0 0
+================DEBUG===============
+acc num 2 output level 2 	 file size 107898265
+====================================
+1756207613050 ms at outer start
+now acc id 2
+ file size tune policy : KCompactionCSDSSTlayer 107919065 -> 520093696 2
+gen_sst_file_limit 520093696
+totol used memory space 2415921352
+1
+verify time: 4.58 ms
+** csd compaction time: 1306.07 ms
+** csd run time: 1311.35 ms
+--------------------
+===RELESE===, acc_num: 0
+-- DEBUG: Array party l - 3  r - 3 , file pos allocate: 9 9 12 10, output file allocate: 0 0 0 0
+verify time: 2.10 ms
+** cpu compaction time: 2319.54 ms
+** cpu run time: 2324.8 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_3 status:0 1 1 1
+421.05 294.68 456.56 370.04 400.70 244.01 289.73 342.40 274.72 207.58 
+sst read : 40482162
+--------------------
+3 
+1063 3
+index_write_size = 503808
+=====================CSDWrite==============acc:3===
+CSD write SST id: 1064, path 2, sst_length is 130021762, index_length 499044, entries 122836
+output act file size 130523302
+sst read : 67416103
+--------------------
+index_write_size = 503808
+=====================CSDWrite==============acc:3===
+CSD write SST id: 1065, path 2, sst_length is 29480384, index_length 112776, entries 27851
+output act file size 29596616
+index_write_size = 114688
+=====================CSDWrite==============acc:3===
+Empty file, sst_length is 0, index_length 0, entries 0
+-----------compaction all times-----------
+****** program device time: 0.023021 ms
+****** prepare file time: 0.093515 ms
+****** opencl time: 0.010471 ms
+****** set arg time: 125.132 ms
+****** enqueueMapBuffer time: 172.316 ms
+****** prepare host time: 0.024332 ms
+****** read file time: 295.658 ms
+****** kernel time: 700.624 ms
+****** prepare write time: 0.134059 ms
+****** write file time: 230.424 ms
+****** tail handle time: 0.273156 ms
+all_time: 382.747 ms
+----------------------------------------------
+1756207613254 ms at outer end
+verify time: 2.70 ms
+** csd compaction time: 1524.85 ms
+** csd run time: 1545.66 ms
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 2 2, output file allocate: 0 0 0 0
+===RELESE===, acc_num: 3
+---- Kernel Time: 258109904ns -----
+=====================CSDWrite==============acc:2===
+CSD write SST id: 1070, path 3, sst_length is 107332973, index_length 411888, entries 101401
+output act file size 107748402
+verify time: 0.29 ms
+** cpu compaction time: 444.379 ms
+** cpu run time: 444.888 ms
+verify time: 0.73 ms
+** cpu compaction time: 1759.61 ms
+** cpu run time: 1791.34 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_2 status:0 1 1 0
+89.81 167.37 234.37 387.13 339.56 395.31 399.48 396.52 330.67 91.17 
+index_write_size = 413696
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_2 status:0 1 1 0
+89.81 167.37 234.37 387.13 339.56 395.31 399.48 396.52 330.67 122.84 
+=====================CSDWrite==============acc:2===
+Empty file, sst_length is 0, index_length 0, entries 0
+=====================CSDWrite==============acc:2===
+Empty file, sst_length is 0, index_length 0, entries 0
+=====================CSDWrite==============acc:2===
+Empty file, sst_length is 0, index_length 0, entries 0
+-----------compaction all times-----------
+****** program device time: 0.010612 ms
+****** prepare file time: 0.04217 ms
+****** opencl time: 0.006667 ms
+****** set arg time: 3.34248 ms
+****** enqueueMapBuffer time: 0.270324 ms
+****** prepare host time: 0.019324 ms
+****** read file time: 148.358 ms
+****** kernel time: 258.202 ms
+****** prepare write time: 0.132239 ms
+****** write file time: 268.011 ms
+****** tail handle time: 0.187074 ms
+all_time: 909.279 ms
+----------------------------------------------
+1756207613729 ms at outer end
+0 
+1074 0
+verify time: 8.91 ms
+** csd compaction time: 678.616 ms
+** csd run time: 710.255 ms
+===RELESE===, acc_num: 2
+1 
+1076 1
+verify time: 0.80 ms
+** cpu compaction time: 1622.46 ms
+** cpu run time: 1647.86 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_1 status:0 1 0 0
+133.04 167.37 234.37 387.13 339.56 395.31 399.48 396.52 330.67 122.84 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 0 0 0 0, output file allocate: 1 0 0 1
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 0 0 0 0, output file allocate: 1 1 1 1
+verify time: 0.97 ms
+** cpu compaction time: 1258.34 ms
+** cpu run time: 1271.65 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_1 status:0 1 0 0
+421.05 294.68 456.56 370.04 262.39 244.01 289.73 342.40 274.72 207.58 
+verify time: 0.73 ms
+** cpu compaction time: 1613.15 ms
+** cpu run time: 1614.67 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_1 status:0 1 0 0
+133.04 113.10 234.37 387.13 339.56 395.31 399.48 396.52 330.67 122.84 
+2 
+1080 2
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 1 3, output file allocate: 0 0 0 0
+3 
+1083 3
+0 
+1085 0
+verify time: 0.83 ms
+** cpu compaction time: 964.337 ms
+** cpu run time: 977.263 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_1 status:0 1 0 0
+421.05 294.68 456.56 370.04 262.39 273.90 289.73 342.40 274.72 207.58 
+1 
+1087 1
+2 
+1089 2
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 1 4, output file allocate: 0 0 0 0
+3 
+1092 3
+0 
+1094 0
+verify time: 0.61 ms
+** cpu compaction time: 955.313 ms
+** cpu run time: 976.738 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_1 status:0 1 0 0
+421.05 294.68 456.56 370.04 262.39 273.90 276.50 342.40 274.72 207.58 
+1 
+1096 1
+2 
+1098 2
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 1 5, output file allocate: 0 0 0 0
+3 
+1101 3
+0 
+1103 0
+1 
+1105 1
+verify time: 0.66 ms
+** cpu compaction time: 960.788 ms
+** cpu run time: 971.02 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_1 status:0 1 0 0
+421.05 294.68 456.56 370.04 262.39 273.90 276.50 274.92 274.72 207.58 
+2 
+1107 2
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 1 6, output file allocate: 0 0 0 0
+3 
+1110 3
+0 
+1112 0
+verify time: 0.82 ms
+** cpu compaction time: 946.809 ms
+** cpu run time: 966.127 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_1 status:0 1 0 0
+421.05 294.68 456.56 370.04 262.39 273.90 276.50 274.92 278.98 207.58 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 0 0 0 7, output file allocate: 0 0 0 0
+1 
+1115 1
+2 
+1117 2
+3 
+1119 3
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 1 8, output file allocate: 0 0 0 0
+0 
+1122 0
+1 
+1124 1
+verify time: 0.64 ms
+** cpu compaction time: 917.715 ms
+** cpu run time: 935.154 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_1 status:0 1 0 0
+421.05 294.68 456.56 370.04 262.39 273.90 276.50 274.92 278.98 287.83 
+2 
+1126 2
+---- Kernel Time: 10621535511ns -----
+=====================CSDWrite==============acc:1===
+CSD write SST id: 1127, path 0, sst_length is 130021761, index_length 499044, entries 122836
+output act file size 130523302
+3 
+1129 3
+verify time: 2.39 ms
+** cpu compaction time: 2816.49 ms
+** cpu run time: 2829.91 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_1 status:0 1 0 0
+398.51 294.68 456.56 370.04 262.39 273.90 276.50 274.92 278.98 287.83 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 1 5, output file allocate: 0 0 0 0
+0 
+1132 0
+index_write_size = 503808
+=====================CSDWrite==============acc:1===
+CSD write SST id: 1133, path 0, sst_length is 26329105, index_length 100672, entries 24874
+output act file size 26434688
+verify time: 0.32 ms
+** cpu compaction time: 574.286 ms
+** cpu run time: 574.963 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_1 status:0 1 0 0
+398.51 459.94 456.56 370.04 262.39 273.90 276.50 274.92 278.98 287.83 
+index_write_size = 102400
+=====================CSDWrite==============acc:1===
+Empty file, sst_length is 0, index_length 0, entries 0
+=====================CSDWrite==============acc:1===
+Empty file, sst_length is 0, index_length 0, entries 0
+-----------compaction all times-----------
+****** program device time: 0.015999 ms
+****** prepare file time: 0.061323 ms
+****** opencl time: 0.007594 ms
+****** set arg time: 126.839 ms
+****** enqueueMapBuffer time: 118.615 ms
+****** prepare host time: 0.030411 ms
+****** read file time: 379.485 ms
+****** kernel time: 10621.7 ms
+****** prepare write time: 0.422584 ms
+****** write file time: 3091.91 ms
+****** tail handle time: 0.293486 ms
+all_time: 14623.6 ms
+----------------------------------------------
+1756207626079 ms at outer end
+verify time: 5.16 ms
+** csd compaction time: 14339.4 ms
+** csd run time: 14345.1 ms
+===RELESE===, acc_num: 1
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 0 0 0 0, output file allocate: 0 0 0 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 5 1 0 0, output file allocate: 0 0 0 2
+1 
+1137 1
+2 
+1140 2
+3 
+1142 3
+0 
+1145 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 6, output file allocate: 0 0 0 0
+1 
+1149 1
+2 
+1153 2
+verify time: 0.56 ms
+** cpu compaction time: 990.358 ms
+** cpu run time: 1002.29 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+398.51 459.94 266.70 370.04 262.39 273.90 276.50 274.92 278.98 287.83 
+3 
+1156 3
+0 
+1159 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 7, output file allocate: 0 0 0 0
+1 
+1163 1
+2 
+1166 2
+verify time: 0.60 ms
+** cpu compaction time: 901.999 ms
+** cpu run time: 917.966 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+398.51 459.94 266.70 292.84 262.39 273.90 276.50 274.92 278.98 287.83 
+3 
+1169 3
+0 
+1174 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 8, output file allocate: 0 0 0 0
+1 
+1179 1
+verify time: 0.60 ms
+** cpu compaction time: 4842.82 ms
+** cpu run time: 4888.01 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 3 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+32.43 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 
+2 
+1183 2
+verify time: 0.62 ms
+** cpu compaction time: 829.72 ms
+** cpu run time: 839.629 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+398.51 459.94 266.70 292.84 318.36 273.90 276.50 274.92 278.98 287.83 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 0 8, output file allocate: 0 0 0 0
+3 
+1186 3
+0 
+1190 0
+1 
+1193 1
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 2 1 9, output file allocate: 0 0 0 0
+2 
+1197 2
+3 
+1200 3
+0 
+1204 0
+verify time: 1.72 ms
+** cpu compaction time: 2643.73 ms
+** cpu run time: 2666.09 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+398.51 459.94 266.70 292.84 318.36 324.65 276.50 274.92 278.98 287.83 
+verify time: 0.77 ms
+** cpu compaction time: 1309.1 ms
+** cpu run time: 1324.8 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+398.51 459.94 266.70 292.84 318.36 324.65 201.76 274.92 278.98 287.83 
+1 
+1208 1
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 8, output file allocate: 0 0 0 0
+2 
+1212 2
+3 
+1215 3
+0 
+1219 0
+verify time: 0.75 ms
+** cpu compaction time: 1029.5 ms
+** cpu run time: 1045.46 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+398.51 459.94 266.70 292.84 318.36 324.65 201.76 256.57 278.98 287.83 
+1 
+1222 1
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 9, output file allocate: 0 0 0 0
+2 
+1225 2
+3 
+1228 3
+0 
+1232 0
+verify time: 0.66 ms
+** cpu compaction time: 902.8 ms
+** cpu run time: 937.029 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+398.51 459.94 266.70 292.84 318.36 324.65 201.76 256.57 292.57 287.83 
+1 
+1235 1
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 10, output file allocate: 0 0 0 0
+2 
+1239 2
+3 
+1242 3
+verify time: 0.58 ms
+** cpu compaction time: 1003.6 ms
+** cpu run time: 1014.77 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+398.51 459.94 266.70 292.84 318.36 324.65 201.76 256.57 292.57 263.19 
+0 
+1247 0
+verify time: 7.65 ms
+** cpu compaction time: 13736.7 ms
+** cpu run time: 13745.8 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 1 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+244.14 253.72 265.66 245.01 233.19 269.40 245.19 0.00 0.00 0.00 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 3 9 16 15, output file allocate: 4 0 0 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 3 9 16 15, output file allocate: 1 0 0 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 3 9 16 15, output file allocate: 1 0 0 0
+-- DEBUG: Array party l - 1  r - 1 , file pos allocate: 3 8 16 15, output file allocate: 0 0 0 0
+================DEBUG===============
+acc num 3 output level 2 	 file size 160014582
+====================================
+-- DEBUG: Array party l - 1  r - 1 , file pos allocate: 3 8 16 15, output file allocate: 0 0 0 0
+1756207639833 ms at outer start
+now acc id 3
+================DEBUG===============
+acc num 0 output level 2 	 file size 192631457
+====================================
+ file size tune policy : KCompactionCSDSSTlayer 160035382 -> 520093696 2
+gen_sst_file_limit 520093696
+totol used memory space 2415921352
+1
+-- DEBUG: Array party l - 3  r - 3 , file pos allocate: 3 9 16 14, output file allocate: 0 0 0 0
+1756207639834 ms at outer start
+now acc id 0
+ file size tune policy : KCompactionCSDSSTlayer 192652257 -> 520093696 2
+gen_sst_file_limit 520093696
+totol used memory space 2415921352
+1
+-- DEBUG: Array party l - 1  r - 2 , file pos allocate: 4 9 17 16, output file allocate: 0 2 0 0
+--------------------
+--------------------
+-- DEBUG: Array party l - 1  r - 1 , file pos allocate: 4 9 17 16, output file allocate: 0 0 0 0
+================DEBUG===============
+acc num 1 output level 2 	 file size 191440531
+====================================
+1756207639854 ms at outer start
+now acc id 1
+ file size tune policy : KCompactionCSDSSTlayer 191461331 -> 520093696 2
+gen_sst_file_limit 520093696
+totol used memory space 2415921352
+1
+-- DEBUG: Array party l - 1  r - 1 , file pos allocate: 6 9 17 16, output file allocate: 0 0 0 0
+================DEBUG===============
+acc num 2 output level 2 	 file size 192002101
+====================================
+-- DEBUG: Array party l - 3  r - 3 , file pos allocate: 6 10 17 15, output file allocate: 0 0 0 0
+1756207639857 ms at outer start
+now acc id 2
+ file size tune policy : KCompactionCSDSSTlayer 192022901 -> 520093696 2
+gen_sst_file_limit 520093696
+totol used memory space 2415921352
+1
+--------------------
+sst read : 125215400
+--------------------
+sst read : 104054133
+--------------------
+1 
+1254 1
+--------------------
+sst read : 124585956
+--------------------
+sst read : 55960449
+--------------------
+sst read : 67416057
+--------------------
+sst read : 124199868
+--------------------
+sst read : 67416145
+--------------------
+sst read : 67240663
+--------------------
+verify time: 0.51 ms
+** cpu compaction time: 528.461 ms
+** cpu run time: 533.905 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_4 status:1 1 1 1
+133.04 113.10 226.94 387.13 339.56 395.31 399.48 396.52 330.67 122.84 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 5 1 0 3, output file allocate: 0 0 4 0
+2 
+1261 2
+---- Kernel Time: 385351639ns -----
+=====================CSDWrite==============acc:3===
+CSD write SST id: 1262, path 1, sst_length is 130019631, index_length 499092, entries 122848
+output act file size 130523350
+---- Kernel Time: 460380402ns -----
+=====================CSDWrite==============acc:0===
+CSD write SST id: 1264, path 1, sst_length is 130019985, index_length 499092, entries 122848
+output act file size 130523350
+---- Kernel Time: 458864001ns -----
+=====================CSDWrite==============acc:2===
+CSD write SST id: 1265, path 1, sst_length is 130019831, index_length 499092, entries 122848
+output act file size 130523350
+verify time: 0.74 ms
+** cpu compaction time: 888.223 ms
+** cpu run time: 906.704 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_4 status:1 1 1 1
+133.04 113.10 226.94 214.78 339.56 395.31 399.48 396.52 330.67 122.84 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 2 6, output file allocate: 0 0 0 0
+-- DEBUG: Array party l - 1  r - 2 , file pos allocate: 6 9 16 19, output file allocate: 0 3 0 0
+verify time: 0.71 ms
+** cpu compaction time: 520.667 ms
+** cpu run time: 521.6 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 3 speed: Compaction_on_CSD_num_4 status:1 1 1 1
+32.43 414.77 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 5 1 4 3, output file allocate: 0 2 1 1
+3 
+1272 3
+index_write_size = 503808
+0 
+1274 0
+index_write_size = 503808
+index_write_size = 503808
+verify time: 0.60 ms
+** cpu compaction time: 807.387 ms
+** cpu run time: 808.555 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_4 status:1 1 1 1
+408.94 459.94 266.70 292.84 318.36 324.65 201.76 256.57 292.57 263.19 
+=====================CSDWrite==============acc:3===
+CSD write SST id: 1275, path 1, sst_length is 29046113, index_length 111116, entries 27444
+output act file size 29160780
+=====================CSDWrite==============acc:2===
+=====================CSDWrite==============acc:0===
+CSD write SST id: 1276, path 1, sst_length is 60801776, index_length 233132, entries 57448
+CSD write SST id: 1277, path 1, sst_length is 61427313, index_length 235540, entries 58039
+output act file size 61664084
+output act file size 61039084
+1 
+1279 1
+index_write_size = 114688
+index_write_size = 237568
+index_write_size = 237568
+=====================CSDWrite==============acc:3===
+Empty file, sst_length is 0, index_length 0, entries 0
+=====================CSDWrite==============acc:3===
+Empty file, sst_length is 0, index_length 0, entries 0
+-----------compaction all times-----------
+****** program device time: 0.005984 ms
+****** prepare file time: 0.099493 ms
+****** opencl time: 0.010607 ms
+****** set arg time: 17.349 ms
+****** enqueueMapBuffer time: 0.324556 ms
+****** prepare host time: 0.011261 ms
+****** read file time: 305.697 ms
+****** kernel time: 385.442 ms
+****** prepare write time: 0.13925 ms
+****** write file time: 1502.14 ms
+****** tail handle time: 0.257638 ms
+all_time: 4207.23 ms
+----------------------------------------------
+1756207642045 ms at outer end
+=====================CSDWrite==============acc:0===
+Empty file, sst_length is 0, index_length 0, entries 0
+=====================CSDWrite==============acc:0===
+Empty file, sst_length is 0, index_length 0, entries 0
+-----------compaction all times-----------
+****** program device time: 0.006218 ms
+****** prepare file time: 0.062743 ms
+****** opencl time: 0.008539 ms
+****** set arg time: 17.1413 ms
+****** enqueueMapBuffer time: 0.277804 ms
+****** prepare host time: 0.00819 ms
+****** read file time: 315.138 ms
+****** kernel time: 460.484 ms
+****** prepare write time: 0.125633 ms
+****** write file time: 1620.39 ms
+****** tail handle time: 0.27982 ms
+all_time: 5827.9 ms
+----------------------------------------------
+1756207642248 ms at outer end
+=====================CSDWrite==============acc:2===
+Empty file, sst_length is 0, index_length 0, entries 0
+=====================CSDWrite==============acc:2===
+Empty file, sst_length is 0, index_length 0, entries 0
+-----------compaction all times-----------
+****** program device time: 0.016409 ms
+****** prepare file time: 0.059046 ms
+****** opencl time: 0.007271 ms
+****** set arg time: 195.105 ms
+****** enqueueMapBuffer time: 0.393027 ms
+****** prepare host time: 0.009492 ms
+****** read file time: 163.221 ms
+****** kernel time: 459.115 ms
+****** prepare write time: 0.177488 ms
+****** write file time: 1638.06 ms
+****** tail handle time: 0.224513 ms
+all_time: 7466.18 ms
+----------------------------------------------
+1756207642314 ms at outer end
+verify time: 124.77 ms
+** csd compaction time: 2211.52 ms
+** csd run time: 2545.53 ms
+===RELESE===, acc_num: 3
+verify time: 65.22 ms
+** csd compaction time: 2413.95 ms
+** csd run time: 2557.2 ms
+===RELESE===, acc_num: 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 5 1 4 3, output file allocate: 0 2 1 1
+verify time: 33.66 ms
+** csd compaction time: 2456.41 ms
+** csd run time: 2548.31 ms
+===RELESE===, acc_num: 2
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 5 5 4 3, output file allocate: 0 0 0 2
+2 
+1285 2
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 1 7, output file allocate: 0 0 0 0
+verify time: 0.42 ms
+** cpu compaction time: 2679.61 ms
+** cpu run time: 2696.11 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_1 status:0 1 0 0
+133.04 113.10 226.94 214.78 71.66 395.31 399.48 396.52 330.67 122.84 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 5 5 4 3, output file allocate: 0 0 2 2
+3 
+1288 3
+0 
+1293 0
+verify time: 0.69 ms
+** cpu compaction time: 2571.41 ms
+** cpu run time: 2669.03 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 2 speed: Compaction_on_CSD_num_1 status:0 1 0 0
+133.04 113.10 226.94 214.78 71.66 78.52 399.48 396.52 330.67 122.84 
+verify time: 0.65 ms
+** cpu compaction time: 977.996 ms
+** cpu run time: 1006.5 ms
+verify time: 11.04 ms
+** cpu compaction time: 2576.49 ms
+** cpu run time: 2633.35 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_1 status:0 1 0 0
+408.94 270.09 266.70 292.84 318.36 324.65 201.76 256.57 292.57 263.19 
+now valid layer: 1 0 1 0 0 0 0 0 0 0 
+now layer: 3 speed: Compaction_on_CSD_num_1 status:0 1 0 0
+32.43 414.77 94.18 0.00 0.00 0.00 0.00 0.00 0.00 0.00 
+1 
+1295 1
+2 
+1297 2
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 1 8, output file allocate: 0 0 0 0
+3 
+1300 3
+---- Kernel Time: 4487623373ns -----
+=====================CSDWrite==============acc:1===
+CSD write SST id: 1301, path 1, sst_length is 130019694, index_length 499092, entries 122848
+output act file size 130523350
+index_write_size = 503808
+=====================CSDWrite==============acc:1===
+CSD write SST id: 1303, path 1, sst_length is 60261985, index_length 231068, entries 56938
+output act file size 60496348
+0 
+1304 0
+verify time: 0.62 ms
+** cpu compaction time: 910.603 ms
+** cpu run time: 923.554 ms
+now valid layer: 1 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_1 status:0 1 0 0
+408.94 270.09 290.05 292.84 318.36 324.65 201.76 256.57 292.57 263.19 
+index_write_size = 233472
+=====================CSDWrite==============acc:1===
+Empty file, sst_length is 0, index_length 0, entries 0
+=====================CSDWrite==============acc:1===
+Empty file, sst_length is 0, index_length 0, entries 0
+-----------compaction all times-----------
+****** program device time: 0.00684 ms
+****** prepare file time: 0.077367 ms
+****** opencl time: 0.006573 ms
+****** set arg time: 10.1012 ms
+****** enqueueMapBuffer time: 0.639583 ms
+****** prepare host time: 0.013751 ms
+****** read file time: 408.948 ms
+****** kernel time: 4487.72 ms
+****** prepare write time: 0.503749 ms
+****** write file time: 568.769 ms
+****** tail handle time: 0.254222 ms
+all_time: 12523.4 ms
+----------------------------------------------
+1756207645332 ms at outer end
+verify time: 16.81 ms
+** csd compaction time: 5477.07 ms
+** csd run time: 5500.31 ms
+===RELESE===, acc_num: 1
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 0 0 0 0, output file allocate: 0 0 0 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 7 7 7 4, output file allocate: 0 0 0 2
+1 
+1308 1
+2 
+1311 2
+3 
+1314 3
+0 
+1317 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 10, output file allocate: 0 0 0 0
+1 
+1322 1
+verify time: 0.32 ms
+** cpu compaction time: 580.172 ms
+** cpu run time: 580.737 ms
+now valid layer: 1 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+408.94 270.09 290.05 455.28 318.36 324.65 201.76 256.57 292.57 263.19 
+2 
+1325 2
+3 
+1328 3
+0 
+1331 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 11, output file allocate: 0 0 0 0
+1 
+1335 1
+verify time: 0.57 ms
+** cpu compaction time: 663.25 ms
+** cpu run time: 664.128 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+408.94 270.09 290.05 455.28 398.26 324.65 201.76 256.57 292.57 263.19 
+2 
+1337 2
+3 
+1340 3
+0 
+1343 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 12, output file allocate: 0 0 0 0
+1 
+1347 1
+2 
+1350 2
+verify time: 0.58 ms
+** cpu compaction time: 797.324 ms
+** cpu run time: 798.406 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+408.94 270.09 290.05 455.28 398.26 331.28 201.76 256.57 292.57 263.19 
+3 
+1352 3
+0 
+1355 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 13, output file allocate: 0 0 0 0
+1 
+1360 1
+verify time: 0.28 ms
+** cpu compaction time: 661.067 ms
+** cpu run time: 661.577 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+408.94 270.09 290.05 455.28 398.26 331.28 399.58 256.57 292.57 263.19 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 0 0 13, output file allocate: 0 0 0 0
+2 
+1364 2
+3 
+1368 3
+0 
+1371 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 14, output file allocate: 0 0 0 0
+1 
+1375 1
+2 
+1378 2
+verify time: 0.64 ms
+** cpu compaction time: 1072.22 ms
+** cpu run time: 1099.2 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+408.94 270.09 290.05 455.28 398.26 331.28 399.58 246.35 292.57 263.19 
+3 
+1382 3
+verify time: 1.97 ms
+** cpu compaction time: 2887.46 ms
+** cpu run time: 2899.72 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+408.94 270.09 290.05 455.28 398.26 331.28 399.58 246.35 365.85 263.19 
+0 
+1385 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 12, output file allocate: 0 0 0 0
+1 
+1389 1
+2 
+1393 2
+verify time: 0.58 ms
+** cpu compaction time: 732.828 ms
+** cpu run time: 734.241 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+408.94 270.09 290.05 455.28 398.26 331.28 399.58 246.35 365.85 360.43 
+3 
+1396 3
+0 
+1398 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 13, output file allocate: 0 0 0 0
+1 
+1402 1
+verify time: 0.57 ms
+** cpu compaction time: 677.607 ms
+** cpu run time: 678.547 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+389.80 270.09 290.05 455.28 398.26 331.28 399.58 246.35 365.85 360.43 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 1 1 0 13, output file allocate: 0 0 0 0
+2 
+1407 2
+3 
+1410 3
+0 
+1412 0
+1 
+1415 1
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 2 1 14, output file allocate: 0 0 0 0
+2 
+1420 2
+verify time: 0.74 ms
+** cpu compaction time: 937.699 ms
+** cpu run time: 938.89 ms
+verify time: 15.28 ms
+** cpu compaction time: 2552.06 ms
+** cpu run time: 2583.87 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+389.80 281.69 290.05 455.28 398.26 331.28 399.58 246.35 365.85 360.43 
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+389.80 281.69 336.32 455.28 398.26 331.28 399.58 246.35 365.85 360.43 
+3 
+1424 3
+0 
+1427 0
+1 
+1431 1
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 2 1 1 13, output file allocate: 0 0 0 0
+2 
+1434 2
+3 
+1437 3
+0 
+1440 0
+verify time: 0.86 ms
+** cpu compaction time: 1190.46 ms
+** cpu run time: 1238.4 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 0 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+389.80 281.69 336.32 221.88 398.26 331.28 399.58 246.35 365.85 360.43 
+1 
+1444 1
+verify time: 9.33 ms
+** cpu compaction time: 17713 ms
+** cpu run time: 17722.7 ms
+now valid layer: 0 0 1 0 0 0 0 0 0 0 
+now layer: 1 speed: Compaction_on_CSD_num_0 status:0 0 0 0
+244.14 253.72 265.66 245.01 233.19 269.40 245.19 270.69 0.00 0.00 
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 4 10 10 19, output file allocate: 4 0 0 0
+================DEBUG===============
+acc num 2 output level 2 	 file size 539349049
+====================================
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 4 10 10 19, output file allocate: 4 0 0 0
+-- DEBUG: Array party l - 0  r - 3 , file pos allocate: 4 10 10 19, output file allocate: 1 0 0 0
+1756207663090 ms at outer start
+================DEBUG===============
+acc num 3 output level 2 	 file size 89432329
+====================================
+now acc id 2
+-- DEBUG: Array party l - 3  r - 3 , file pos allocate: 4 10 10 18, output file allocate: 0 0 0 0
+1756207663090 ms at outer start
+now acc id 3
+-- DEBUG: Array party l - 3  r - 3 , file pos allocate: 4 10 10 17, output file allocate: 0 0 0 0
+-- DEBUG: Array party l - 3  r - 3 , file pos allocate: 4 10 10 17, output file allocate: 0 0 0 0
+ file size tune policy : KCompactionCSDSSTlayer 89453129 -> 520093696 2
+gen_sst_file_limit 520093696
+totol used memory space 2415921352
+1
+gen_sst_file_limit 539373568
+totol used memory space 2435201224
+1
+--------------------
+--------------------
+sst read : 89432329
+--------------------
+sst read : 134837188
+--------------------
+2 
+1454 2
+sst read : 134837340
+--------------------
+---- Kernel Time: 242480894ns -----
+=====================CSDWrite==============acc:3===
+CSD write SST id: 1456, path 3, sst_length is 89022684, index_length 341564, entries 84110
+output act file size 89368958
+sst read : 134837005
+--------------------
+3 
+1459 3
+sst read : 134837516
+--------------------
+index_write_size = 344064

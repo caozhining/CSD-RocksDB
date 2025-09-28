@@ -99,6 +99,7 @@
 #include "ycsbcore/measurements.h"
 #include "ycsbcore/timer.h"
 #include "ycsbcore/utils.h"
+#include <unistd.h> 
 
 #ifdef MEMKIND
 #include "memory/memkind_kmem_allocator.h"
@@ -1272,7 +1273,7 @@ DEFINE_bool(
 DEFINE_int64(load_duration, 0, "The loading duration of YCSB");
 DEFINE_string(ycsb_workload, "", "The workload of YCSB");
 DEFINE_int64(ycsb_request_speed, 100, "The request speed of YCSB, in MB/s");
-DEFINE_int64(load_num, 20000000, "Num of operations in loading phrase");
+DEFINE_int64(load_num, 200000000, "Num of operations in loading phrase");
 DEFINE_int64(running_num, 20000000, "Num of operations in running phrase");
 DEFINE_int64(random_fill_average, 150,
              "average inputs rate of background write operations");
@@ -3558,7 +3559,7 @@ class Benchmark {
         // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v2048_20250609.xclbin";
         // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v1024_rprepair_20250616.xclbin";
         // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v512_20250609.xclbin";
-        open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v256_20250609.xclbin";
+        open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v256_20250822.xclbin";
         if (open_options_.compaction_csd_policy == kCompactionCSDArray)
         {
           open_options_.Compaction_accelerator_id.resize(4);
@@ -3579,9 +3580,10 @@ class Benchmark {
         method = &Benchmark::WriteSeq;
       } else if (name == "fillrandom") {
         fresh_db = true;
-        // open_options_.compaction_device =kCompactionOnCSD;
+        open_options_.compaction_device =kCompactionOnCSD;
         // open_options_.compaction_csd_policy = kCompactionCSDArray;
-        open_options_.compaction_csd_policy = kCompactionLessThan4;
+        open_options_.compaction_csd_policy = kCompactionCSDArrayScheduleOff;
+        // open_options_.compaction_csd_policy = kCompactionLessThan4;
         // open_options_.level0_stop_writes_trigger = 2;
         // open_options_.level0_file_num_compaction_trigger = 1;
         // open_options_.max_bytes_for_level_base = 64 * 1024 * 1024; // 64MB
@@ -3589,9 +3591,14 @@ class Benchmark {
 
         // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v2048_20250609.xclbin";
         // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v1024_rprepair_20250616.xclbin";
+        // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v1024_20250825.xclbin";
         // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v512_20250609.xclbin";
-        open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v256_20250609.xclbin";
-        if (open_options_.compaction_csd_policy == kCompactionCSDArray)
+        // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v256_20250609.xclbin";
+        // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v256_rprepair_20250715.xclbin";
+        // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k16v1024_20250906.xclbin";
+        open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v1024_20250825.xclbin";
+        // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k48v1024_20250909.xclbin";
+        if (open_options_.compaction_csd_policy == kCompactionCSDArray || open_options_.compaction_csd_policy == kCompactionCSDArrayScheduleOff)
         {
           open_options_.Compaction_accelerator_id.resize(4);
           open_options_.Compaction_accelerator_id= {1, 0, 2, 3};
@@ -3657,13 +3664,14 @@ class Benchmark {
                   entries_per_batch_);
         }
         open_options_.compaction_device =kCompactionOnCSD;
-        // open_options_.compaction_csd_policy = kCompactionCSDArray;
-        open_options_.compaction_csd_policy = kCompactionLessThan4;
+        open_options_.compaction_csd_policy = kCompactionCSDArray;
+        // open_options_.compaction_csd_policy = kCompactionLessThan4;
 
         // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v2048_20250609.xclbin";
         // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v1024_rprepair_20250616.xclbin";
         // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v512_20250609.xclbin";
-        open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v256_20250609.xclbin";
+        // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v256_20250609.xclbin";
+        open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v256_rprepair_20250715.xclbin";
         if (open_options_.compaction_csd_policy == kCompactionCSDArray)
         {
           open_options_.Compaction_accelerator_id.resize(4);
@@ -3698,13 +3706,14 @@ class Benchmark {
       else if (name == "ycsb") {
         fresh_db = true;
         open_options_.compaction_device =kCompactionOnCSD;
-        // open_options_.compaction_csd_policy = kCompactionCSDArray;
-        open_options_.compaction_csd_policy = kCompactionLessThan4;
+        open_options_.compaction_csd_policy = kCompactionCSDArray;
+        // open_options_.compaction_csd_policy = kCompactionLessThan4;
+        
 
         // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v2048_20250609.xclbin";
         // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v1024_rprepair_20250616.xclbin";
         // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v512_20250609.xclbin";
-        open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v256_20250609.xclbin";
+        open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v1024_ycsb_20250902.xclbin"; 
         if (open_options_.compaction_csd_policy == kCompactionCSDArray)
         {
           open_options_.Compaction_accelerator_id.resize(4);
@@ -3715,8 +3724,10 @@ class Benchmark {
           open_options_.Compaction_accelerator_id.resize(1);
           open_options_.Compaction_accelerator_id= {1};
         }
-        
-        open_options_.compaction_csd_gen_sst_file_size_policy=KCompactionCSDSSTlayer;
+        open_options_.compaction_csd_gen_sst_file_size_policy=kCompactionCSDSSTavg;
+        // open_options_.compaction_csd_gen_sst_file_size_policy=KCompactionCSDSSTlayer;
+
+        open_options_.bottommost_compression = rocksdb::kNoCompression;
 
         method = &Benchmark::YCSBIntegrate;
       } else if (name == "ycsb_load") {
@@ -3757,13 +3768,14 @@ class Benchmark {
         num_threads++;  // Add extra thread for writing
 
         open_options_.compaction_device =kCompactionOnCSD;
-        // open_options_.compaction_csd_policy = kCompactionCSDArray;
-        open_options_.compaction_csd_policy = kCompactionLessThan4;
+        open_options_.compaction_csd_policy = kCompactionCSDArray;
+        // open_options_.compaction_csd_policy = kCompactionLessThan4;
 
         // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v2048_20250609.xclbin";
         // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v1024_rprepair_20250616.xclbin";
         // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v512_20250609.xclbin";
-        open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v256_20250609.xclbin";
+        // open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v256_20250609.xclbin";
+        open_options_.CompactionKernelPath="/home/yjr/projects/compaction_varkey/build_dir.hw.xilinx_u2_gen3x4_xdma_gc_2_202110_1/compaction_k32v256_rprepair_20250715.xclbin";
         if (open_options_.compaction_csd_policy == kCompactionCSDArray)
         {
           open_options_.Compaction_accelerator_id.resize(4);
@@ -4561,6 +4573,7 @@ class Benchmark {
       if (cache_ == nullptr) {
         block_based_options.no_block_cache = true;
       }
+      block_based_options.no_block_cache = true; //for ycsb
       block_based_options.cache_index_and_filter_blocks =
           FLAGS_cache_index_and_filter_blocks;
       block_based_options.pin_l0_filter_and_index_blocks_in_cache =
@@ -4570,6 +4583,9 @@ class Benchmark {
       if (FLAGS_cache_high_pri_pool_ratio > 1e-6) {  // > 0.0 + eps
         block_based_options.cache_index_and_filter_blocks_with_high_priority =
             true;
+      }else{ //for ycsb
+        block_based_options.cache_index_and_filter_blocks_with_high_priority =
+            false;
       }
       if (FLAGS_cache_high_pri_pool_ratio + FLAGS_cache_low_pri_pool_ratio >
           1.0) {
@@ -5236,13 +5252,26 @@ class Benchmark {
             }
           }
         }
-        std::string key = workload->BuildKeyName();
+        std::string key_str = workload->BuildKeyName();
+
         Slice val = gen.Generate();
-        // std::cout<<"key : "<<key<<" value : "<<val.size()<<"\n";
-        if(val.size()!=1024 || key.length()!=24){
-          std::cout<<"!!!!!!!!\n!ERROR : "<<key.length()<<"\n!!!!!!!\n";
+        char buf[36];
+        uint64_t key_num = std::stoull(key_str);
+        for (int j = 0; j < 8; ++j) {
+          buf[j] = (key_num >> (56 - 8 * j)) & 0xFF;
         }
+        for (int j = 8; j < 24; j++){
+          buf[j] = 0x30;
+        }
+        Slice key(buf, 24);
+        // std::cout<<"key : "<<key<<" value : "<<val.size()<<"\n";
+        // if(val.size()!=1024 || key.length()!=24){
+        //   std::cout<<"!!!!!!!!\n!ERROR : "<<key.length()<<"\n!!!!!!!\n";
+        // }
+       
+
         db_.db->Put(w_op, key, val);
+
 
         int64_t batch_bytes = 0;
         for (int64_t j = 0; j < entries_per_batch_; j++) {
@@ -5259,6 +5288,15 @@ class Benchmark {
       }
       thread->stats.AddBytes(bytes);
     }
+
+    sleep(60);
+
+    auto it = db_.db->NewIterator(r_op);
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+      // no-op: 仅拉块进缓存
+    }
+    delete it;
+
 
     if (run) {
       duration = running_duration;
@@ -5280,7 +5318,19 @@ class Benchmark {
         }
         std::string data;
         uint64_t key_num = workload->NextTransactionKeyNum();
-        const std::string key = workload->BuildKeyName(key_num);
+        const std::string key_str = workload->BuildKeyName(key_num);
+
+        uint64_t key_num_hash = std::stoull(key_str);
+        char buf[36];
+
+        for (int j = 0; j < 8; ++j) {
+          buf[j] = (key_num_hash >> (56 - 8 * j)) & 0xFF;
+        }
+        for (int j = 8; j < 24; j++){
+          buf[j] = 0x30;
+        }
+        Slice key(buf, 24);
+
         DB* db = SelectDB(thread);
         switch (workload->NextOp()) {
           case ycsbc::READ: {

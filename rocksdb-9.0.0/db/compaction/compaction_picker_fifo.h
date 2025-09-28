@@ -23,6 +23,14 @@ class FIFOCompactionPicker : public CompactionPicker {
                              const MutableDBOptions& mutable_db_options,
                              VersionStorageInfo* version,
                              LogBuffer* log_buffer) override;
+  Compaction* PickCompactiontoCSD(const std::string& cf_name,
+                                    const MutableCFOptions& mutable_cf_options,
+                                    const MutableDBOptions& mutable_db_options,
+                                    VersionStorageInfo* vstorage,
+                                    LogBuffer* log_buffer,
+                                    uint32_t path_id,
+                                    const std::vector<bool> valid_level
+                                  ){};
 
   Compaction* CompactRange(const std::string& cf_name,
                            const MutableCFOptions& mutable_cf_options,

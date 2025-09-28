@@ -61,6 +61,15 @@ class CompactionPicker {
                                      VersionStorageInfo* vstorage,
                                      LogBuffer* log_buffer) = 0;
 
+  virtual Compaction* PickCompactiontoCSD(const std::string& cf_name,
+                                    const MutableCFOptions& mutable_cf_options,
+                                    const MutableDBOptions& mutable_db_options,
+                                    VersionStorageInfo* vstorage,
+                                    LogBuffer* log_buffer,
+                                    uint32_t path_id,
+                                    const std::vector<bool> valid_level
+                                  ) = 0;
+
   // Return a compaction object for compacting the range [begin,end] in
   // the specified level.  Returns nullptr if there is nothing in that
   // level that overlaps the specified range.  Caller should delete
@@ -258,6 +267,16 @@ class NullCompactionPicker : public CompactionPicker {
                              LogBuffer* /* log_buffer */) override {
     return nullptr;
   }
+  Compaction* PickCompactiontoCSD(const std::string& cf_name,
+                                    const MutableCFOptions& mutable_cf_options,
+                                    const MutableDBOptions& mutable_db_options,
+                                    VersionStorageInfo* vstorage,
+                                    LogBuffer* log_buffer,
+                                    uint32_t path_id,
+                                    const std::vector<bool> valid_level
+                                  ){
+    return nullptr;
+  };
 
   // Always return "nullptr"
   Compaction* CompactRange(const std::string& /*cf_name*/,

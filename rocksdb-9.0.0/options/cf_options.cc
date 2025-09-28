@@ -1032,8 +1032,8 @@ void MutableCFOptions::RefreshDerivedOptions(int num_levels,
       max_file_size[i] = ULLONG_MAX;
     } else if (i > 1) {
       max_file_size[i] = MultiplyCheckOverflow(max_file_size[i - 1],
-                                                  // 1.5);
-                                               target_file_size_multiplier);
+                                                  1.5);
+                                              //  target_file_size_multiplier);
       if(max_file_size[i] > 400 * 1024 * 1024){
         max_file_size[i] = 500 * 1024 * 1024;
       }

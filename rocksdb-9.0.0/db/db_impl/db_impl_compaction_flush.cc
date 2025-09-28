@@ -3641,13 +3641,82 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
     // eventually be installed into SuperVersion
     auto* mutable_cf_options = cfd->GetLatestMutableCFOptions();
     if (!mutable_cf_options->disable_auto_compactions && !cfd->IsDropped()) {
+      std::vector<bool> valid_layer;
+      valid_layer.resize(10);
+
+      // std::cout<<"before Compaction_on_CSD_num_=" << Compaction_on_CSD_num_<<" -- ";
+      // std::cout<<CSD_Compaction_Status[0]<<" "<<CSD_Compaction_Status[1]<<" "<<CSD_Compaction_Status[2]<<" "<<CSD_Compaction_Status[3]<<"\n";
+      // if (cfd->ioptions()->compaction_device==kCompactionOnCSD)
+      // {
+      //   std::vector<uint32_t> numbers = {0, 1, 2, 3};
+      //   std::random_device rd;
+      //   std::mt19937 g(rd()); 
+      //   std::shuffle(numbers.begin(), numbers.end(), g);
+
+      //   std::unique_lock<std::mutex> csdguard(CSD_lock);
+      //   CSD_cv.wait_for(csdguard, std::chrono::milliseconds(10), [this]{  // num!=4代表csd均忙碌，短暂等待
+      //     if (Compaction_on_CSD_num_ < 4)
+      //       return true;
+      //     return false;
+      //   });
+
+      //   if(csdguard.owns_lock()){
+      //     //Check if exist a valid offloading layer
+      //     bool is_exist_vaild_offloading_layer=false;
+      //     for(uint32_t i = 0 ; i < 10; i++){
+      //       if(offload_Compaction_Level[i]){
+      //         is_exist_vaild_offloading_layer=true;
+      //         break;
+      //       }
+      //     }
+      //     if(is_exist_vaild_offloading_layer){
+      //       for(int i = 0; i < 10; i++){
+      //         valid_layer[i] = offload_Compaction_Level[i];
+      //       }
+            
+      //       for(uint32_t i = 0 ; i < 4 ; i++){
+      //         uint32_t now_acc_num = numbers[i];
+      //         if(CSD_Compaction_Status[now_acc_num]==false){
+      //           // Occupy a CSD
+      //           acc_num = now_acc_num;
+      //           CSD_Compaction_Status[now_acc_num] = true;
+      //           Compaction_on_CSD_num_++;
+      //           is_CSD_thread=true;
+      //           // printf("================DEBUG===============\n");
+      //           // printf("acc num %d\n", acc_num);
+      //           // printf("====================================\n");
+      //           printf("===GETACC=== Occupy acc num: %d\n", acc_num);
+      //           break;
+      //         }
+      //       }
+      //       if(acc_num==4){
+      //         // std::cout<<"---- No exist acc ----"<<"\n";
+      //         // std::cout<<"Compaction_on_CSD_num_: " << Compaction_on_CSD_num_<<"\n";
+      //         // std::cout<<CSD_Compaction_Status[0]<<" "<<CSD_Compaction_Status[1]<<" "<<CSD_Compaction_Status[2]<<" "<<CSD_Compaction_Status[3]<<"\n";
+      //       }
+      //     }else{
+      //       // std::cout<<"==== No exist layer ===="<<"\n";
+      //     }
+      //   }
+      // }
+      // std::cout<<"after Compaction_on_CSD_num_: " << Compaction_on_CSD_num_<<" ";
+      // std::cout<<CSD_Compaction_Status[0]<<" "<<CSD_Compaction_Status[1]<<" "<<CSD_Compaction_Status[2]<<" "<<CSD_Compaction_Status[3]<<"\n";
+      // CSD_cv.notify_one();
+      
+
       // NOTE: try to avoid unnecessary copy of MutableCFOptions if
       // compaction is not necessary. Need to make sure mutex is held
       // until we make a copy in the following code
       TEST_SYNC_POINT("DBImpl::BackgroundCompaction():BeforePickCompaction");
+      // mutable_db_options_.max_subcompactions=2;  // 123456test sub compaction
 
-      c.reset(cfd->PickCompaction(*mutable_cf_options, mutable_db_options_,
+      // if(is_CSD_thread){
+      //   c.reset(cfd->PickCompactiontoCSD(*mutable_cf_options, mutable_db_options_,
+      //                             log_buffer, acc_num, valid_layer));
+      // }else{
+        c.reset(cfd->PickCompaction(*mutable_cf_options, mutable_db_options_,
                                   log_buffer));
+      // }
       TEST_SYNC_POINT("DBImpl::BackgroundCompaction():AfterPickCompaction");
 
       if (c != nullptr) {
@@ -3877,9 +3946,89 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
 
     if(c->column_family_data()->ioptions()->compaction_device==kCompactionOnCSD)
     {
-      if (
-        c->column_family_data()->ioptions()->compaction_csd_policy==kCompactionCSDArray || // for test
-        c->column_family_data()->ioptions()->compaction_csd_policy==kCompactionLessThan4)
+      if (c->column_family_data()->ioptions()->compaction_csd_policy==kCompactionCSDArray && offload_Compaction_Level[c.get()->output_level()] && c.get()->output_level()>2)
+      {
+        const std::vector<CompactionInputFiles>& compaction_input_file =
+            *(c->inputs());
+        int file_count=0;
+        uint64_t file_size_sum = 0;
+        int input_file_path_id = 0;
+        for (const auto& files_per_level : compaction_input_file) {  
+          file_count+=files_per_level.size();
+          for (const auto &file : files_per_level.files){
+            file_size_sum += file->fd.file_size;
+            if(files_per_level.level==c.get()->start_level()){
+              input_file_path_id = file->fd.GetPathId();
+            }
+          }
+        }
+        if(file_count<=4)
+        {
+          std::unique_lock<std::mutex> csdguard(CSD_lock);
+          bool ready = CSD_cv.wait_for(csdguard, std::chrono::milliseconds(10), [this, input_file_path_id]{  // csd忙碌则短暂等待
+              if (Compaction_on_CSD_num_ < 4)  // 原方案应该会造成冲突，均忙碌时第一个释放的不一定是等待的csd
+            // if (CSD_Compaction_Status[input_file_path_id]==false)  // 但这个方案反而慢？
+              return true;
+            return false;
+          });
+
+          if(ready){
+            if(CSD_Compaction_Status[input_file_path_id]==false){  // 原方案
+              // Occupy a CSD
+              acc_num = input_file_path_id;
+              CSD_Compaction_Status[input_file_path_id] = true;
+              Compaction_on_CSD_num_++;
+              is_CSD_thread=true;
+              c.get()->SetCompactionOnCSD(acc_num);
+              printf("================DEBUG===============\n");
+              printf("acc num %d output level %d \t file size %lld\n", acc_num, c.get()->output_level(), file_size_sum );
+              printf("====================================\n");
+            }  // 原方案
+          }
+          csdguard.unlock();
+          CSD_cv.notify_one();
+        }
+      }
+      else if (c->column_family_data()->ioptions()->compaction_csd_policy==kCompactionCSDArrayScheduleOff)
+      {
+        const std::vector<CompactionInputFiles>& compaction_input_file =
+            *(c->inputs());
+        int file_count=0;
+        uint64_t file_size_sum = 0;
+        for (const auto& files_per_level : compaction_input_file) {  
+          file_count+=files_per_level.size();
+        }
+        if(file_count<=4)
+        {
+          std::unique_lock<std::mutex> csdguard(CSD_lock);
+          bool ready = CSD_cv.wait_for(csdguard, std::chrono::milliseconds(10), [this]{  // num!=4代表csd均忙碌，短暂等待
+            if (Compaction_on_CSD_num_ < 4)
+              return true;
+            return false;
+          });
+
+          if(ready){
+            for (int csd_id = 0; csd_id < 4; csd_id++){
+              if(CSD_Compaction_Status[csd_id]==false){
+                acc_num = csd_id;
+                CSD_Compaction_Status[csd_id] = true;
+                Compaction_on_CSD_num_++;
+                is_CSD_thread=true;
+                c.get()->SetCompactionOnCSD(acc_num);
+                printf("================DEBUG===============\n");
+                printf("Schedule off, acc num %d output level %d\n", acc_num, c.get()->output_level());
+                printf("====================================\n");
+                break;
+              }
+            }
+          }
+          csdguard.unlock();
+          CSD_cv.notify_one();
+        }
+      }
+      else if (c->column_family_data()->ioptions()->compaction_csd_policy==kCompactionLessThan4 
+        // && c.get()->output_level()<4
+      )
       {
         const std::vector<CompactionInputFiles>& compaction_input_file =
             *(c->inputs());
@@ -3895,13 +4044,19 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
         if(file_count<=4)
         {
           std::unique_lock<std::mutex> csdguard(CSD_lock);
-          CSD_cv.wait(csdguard, [this]{  // 等待，直到Compaction_on_CSD_num_==0
+          bool ready = true;
+          // ready = CSD_cv.wait_for(csdguard, std::chrono::milliseconds(10), [this]{  // num!=0代表csd忙碌，短暂等待
+          //   if (Compaction_on_CSD_num_ == 0)
+          //     return true;
+          //   return false;
+          // });  
+          CSD_cv.wait(csdguard, [this]{  // 必须让CSD_cv等待，直到Compaction_on_CSD_num_==0
             if (Compaction_on_CSD_num_ == 0)
               return true;
             return false;
           });
 
-          if(csdguard.owns_lock()){
+          if(ready){
             if(CSD_Compaction_Status[0]==false){
               // Occupy a CSD
               acc_num = 0;
@@ -3913,12 +4068,40 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
               printf("compaction on csd, output level %d \t file size %lld\n", c.get()->output_level(), file_size_sum);
             }
           }
+          csdguard.unlock();
           CSD_cv.notify_one();
         }
       }
       
     }
-
+    // if(is_CSD_thread){
+    //   const std::vector<CompactionInputFiles>& compaction_input_file =
+    //       *(c->inputs());
+    //   int file_count=0;
+    //   uint64_t file_size_sum = 0;
+    //   for (const auto& files_per_level : compaction_input_file) {  
+    //     file_count+=files_per_level.size();
+    //     for (const auto &file : files_per_level.files){
+    //       file_size_sum += file->fd.file_size;
+    //     }
+    //   }
+    //   if(file_count>4 || file_size_sum>((480 * 4 * 1024 *1024) - 5200 * 4) || c.get()->output_level()<2){
+    //     // invalid compaction, should give it to CPU
+    //     // std::cout<<"Invalid compaction of CSD acc_num"<<acc_num<<", output level "<<c.get()->output_level()<<" file count: "<<file_count<<" file size num"<<file_size_sum<< "\n";
+    //     is_CSD_thread = false;
+    //     std::unique_lock<std::mutex> csdguard(CSD_lock);
+    //     CSD_Compaction_Status[acc_num] = false;
+    //     is_CSD_thread = false;
+    //     Compaction_on_CSD_num_--;
+    //     // printf("================EARLIER RELEASE===============\n");
+    //     // printf("release acc_num %d\n", acc_num);
+    //     // printf("====================================\n");
+    //     printf("===EARLY RELESE===, acc_num: %d\n", acc_num);
+    //   }else{
+    //     c.get()->SetCompactionOnCSD(acc_num);
+    //     // std::cout<<"Pick CSD Compaction successfully "<<c.get()->output_level()<<" "<<acc_num<<" "<< "\n";
+    //   }
+    // }
     CompactionJob compaction_job(
         job_context->job_id, c.get(), immutable_db_options_,
         mutable_db_options_, file_options_for_compaction_, versions_.get(),
@@ -3963,6 +4146,7 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
       // acc_num = c.get()->GetCompactionAccleratorId();
       CSD_Compaction_Status[acc_num] = false;
       is_CSD_thread = false;
+      csdguard.unlock();
       CSD_cv.notify_one();
       // printf("================RELEASE===============\n");
       // printf("release acc_num %d\n", acc_num);
@@ -4140,6 +4324,7 @@ Status DBImpl::BackgroundCompaction(bool* made_progress,
     std::unique_lock<std::mutex> csdguard(CSD_lock);
     CSD_Compaction_Status[acc_num] = false;
     Compaction_on_CSD_num_--;
+    csdguard.unlock();
     CSD_cv.notify_one();
     // printf("================EXTRA RELEASE===============\n");
     // printf("release acc_num %d\n", acc_num);

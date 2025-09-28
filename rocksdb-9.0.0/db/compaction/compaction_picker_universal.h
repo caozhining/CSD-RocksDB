@@ -22,6 +22,14 @@ class UniversalCompactionPicker : public CompactionPicker {
                              const MutableDBOptions& mutable_db_options,
                              VersionStorageInfo* vstorage,
                              LogBuffer* log_buffer) override;
+  Compaction* PickCompactiontoCSD(const std::string& cf_name,
+                                    const MutableCFOptions& mutable_cf_options,
+                                    const MutableDBOptions& mutable_db_options,
+                                    VersionStorageInfo* vstorage,
+                                    LogBuffer* log_buffer,
+                                    uint32_t path_id,
+                                    const std::vector<bool> valid_level
+                                  ){};
   int MaxOutputLevel() const override { return NumberLevels() - 1; }
 
   bool NeedsCompaction(const VersionStorageInfo* vstorage) const override;

@@ -394,6 +394,12 @@ class ColumnFamilyData {
                              const MutableDBOptions& mutable_db_options,
                              LogBuffer* log_buffer);
 
+  Compaction* PickCompactiontoCSD(const MutableCFOptions& mutable_options,
+                             const MutableDBOptions& mutable_db_options,
+                             LogBuffer* log_buffer,
+                             uint32_t path_id, std::vector<bool> valid_layer
+                            );
+
   // Check if the passed range overlap with any running compactions.
   // REQUIRES: DB mutex held
   bool RangeOverlapWithCompaction(const Slice& smallest_user_key,
@@ -555,6 +561,8 @@ class ColumnFamilyData {
   // of its files (if missing)
   void RecoverEpochNumbers();
 
+// #define CompactionInputP2PDisable
+#define CompactionOutputP2PDisable
 
   cl::Device Compaction_accelerator_device[4];
   cl::Context Compaction_csd_context[4];

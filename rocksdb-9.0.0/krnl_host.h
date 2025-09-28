@@ -4,15 +4,16 @@
 #define CSD_MAX_INPUT_FILE_NUM 4
 #define CSD_MAX_OUTPUT_FILE_NUM 4
 
-// #define CSD_KEY_BITS 4
 #define CSD_KEY_BITS 5
 #define CSD_KEY_LENGTH (1 << CSD_KEY_BITS)  // 128 bytes
+// #define CSD_KEY_LENGTH (48)
 #define CSD_KEY_WIDTH_BITS 4    // 用于计算key的宽度，方便offset和index的计算
 #define CSD_KEY_WIDTH_MASK ((1 << CSD_KEY_WIDTH_BITS) - 1)
 #define CSD_KEY_WIDTH (1 << CSD_KEY_WIDTH_BITS)     // 每个数组元素16字节宽，对齐128位
 #define CSD_KEY_BITWIDTH (CSD_KEY_WIDTH * 8)
 #define CSD_KEY_ARRAY_LENGTH ((CSD_KEY_LENGTH * 8) / CSD_KEY_BITWIDTH)
 #define CSD_KEY_LENGTH_BITWIDTH (CSD_KEY_BITS + 1)  // 8 bits
+// #define CSD_KEY_LENGTH_BITWIDTH (7)  // 8 bits
 
 
 // #define CSD_PPS_KERNEL_SINGEL_SIZE 32

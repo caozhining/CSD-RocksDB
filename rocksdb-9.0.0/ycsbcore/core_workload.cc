@@ -218,15 +218,17 @@ std::string CoreWorkload::BuildKeyName(uint64_t key_num) {
   if (!ordered_inserts_) {
     key_num = utils::Hash(key_num);
   }
-  char buffer[40];
-  sprintf(buffer+16, "%llu", key_num);
+  // char buffer[40];
+  // sprintf(buffer+16, "%llu", key_num);
 
-  for(int x=0;x<16;x++)
-    buffer[x]=48;
-  buffer[24]=0;
+  // for(int x=0;x<16;x++)
+  //   buffer[x]=48;
+  // buffer[24]=0;
 
-  std::string output_key(buffer);
+  // std::string output_key(buffer);
   
+  std::string output_key = std::to_string(key_num);
+
   return output_key;
 
   // std::string prekey = "0000";

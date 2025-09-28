@@ -273,7 +273,7 @@ std::string kUserDefinedTimestampsPersisted = "rocksdb.user.defined.timestamps.p
 class CSDTableProperties
 {
 public:
-    CSDTableProperties(const std::string& id, const std::string& session_id, uint64_t file_number, uint64_t index_block_length)
+    CSDTableProperties(const std::string& id, const std::string& session_id, uint64_t file_number, uint64_t index_block_length, uint64_t c_time)
     {
         orig_file_number = file_number;
         data_size = 0;
@@ -314,13 +314,13 @@ public:
 
         // when unknown, set to INT32_MAX
         // TODO: copy from any input sst
-        column_family_id = INT32_MAX;
+        column_family_id = 0;
         // TODO: creation_time is the oldest among the input sst files
-        creation_time = 0;
+        creation_time = c_time;
         // TODO
         oldest_key_time = 0;
         // TODO
-        file_creation_time = 0;
+        file_creation_time = c_time;
         // TODO
         slow_compression_estimated_data_size = 0;
         // same as above
@@ -336,7 +336,7 @@ public:
         // empty for now
         db_id = id;
         db_session_id = session_id;
-        db_host_id = "";
+        db_host_id = "embedded415-System-Product-Name";
         // id == 0 -> name = default
         column_family_name = "defalut";
         filter_policy_name = "";
@@ -345,7 +345,7 @@ public:
         prefix_extractor_name = "nullptr";
         property_collectors_names = "[]";
         compression_name = "NoCompression";
-        compression_options = "";
+        compression_options = "window_bits=-14; level=32767; strategy=0; max_dict_bytes=0; zstd_max_train_bytes=0; enabled=0; max_dict_buffer_bytes=0; use_zstd_dict_trainer=1; ";
         seqno_to_time_mapping = "";
     }
 
@@ -370,7 +370,13 @@ public:
         std::string pre_key;
         pre_key="";
         to_string(temp,index_type);
+        char *test = pp_pointer;
         pp_pointer = putKV(kIndexType,pre_key,temp,head,pp_pointer,data_block_restart_point,data_block_restart_point_num);
+        *(test+2) = 4;
+        for (int i=0; i<3; i++){
+            *(pp_pointer)=0;
+            pp_pointer+=1;
+        }
         pp_pointer = putKV(kPrefixFiltering,pre_key,prefix_filtering,head,pp_pointer,data_block_restart_point,data_block_restart_point_num);
         pp_pointer = putKV(kWholeKeyFiltering,pre_key,whole_key_filtering,head,pp_pointer,data_block_restart_point,data_block_restart_point_num);
         to_string(temp, column_family_id);
@@ -538,7 +544,8 @@ private:
     uint64_t fixed_key_len = 0;
     // ID of column family for this SST file, corresponding to the CF identified
     // by column_family_name.
-    uint64_t column_family_id = INT32_MAX;
+    // uint64_t column_family_id = INT32_MAX;
+    uint64_t column_family_id = 0;
 
     // Oldest ancester time. 0 means unknown.
     //
