@@ -1,5 +1,7 @@
 # CSD-RocksDB
 
+> CSD-CoKV has been accepted by IEEE ICDE 2026. This repository corresponds to the author preprint; DOI and final proceedings metadata will be added after publication.
+
 This repository provides our implementation of **RocksDB accelerated with Samsung SmartSSD**, where we offload **compaction computation** from the host CPU to the **Computational Storage Device (CSD)**. By leveraging the near-data processing capability of SmartSSD, our design significantly improves the overall system throughput.
 
 > **Hardware Requirement**: At least one Samsung SmartSSD device is required to run this system.
