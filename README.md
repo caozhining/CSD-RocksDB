@@ -1,4 +1,4 @@
-# CSD-RocksDB
+# CSD-CoKV
 
 > CSD-CoKV has been accepted by IEEE ICDE 2026. This repository corresponds to the author preprint; DOI and final proceedings metadata will be added after publication.
 
